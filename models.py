@@ -15,7 +15,7 @@ post_tags = db.Table('post_tags',
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(150), unique=True, nullable=False)  # increased
-    password_hash = db.Column(db.String(128))
+    password_hash = db.Column(db.String(512))
     profile_pic = db.Column(db.String(150), nullable=True)
 
     def set_password(self, password):
