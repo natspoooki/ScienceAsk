@@ -25,7 +25,7 @@ class User(UserMixin, db.Model):
         return check_password_hash(self.password_hash, password)
     
     def get_profile_pic(self):
-        return url_for('static', filename='profile_pics/' + self.profile_pic) if self.profile_pic else url_for('static', filename='profile_pics/default.png')
+        return url_for('static', filename='profile_pics/' + self.profile_pic) if self.profile_pic else url_for('static', filename='profile_pics/default_pfp.png')
 
 
 class Tag(db.Model):
