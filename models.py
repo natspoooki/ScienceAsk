@@ -14,9 +14,9 @@ post_tags = db.Table('post_tags',
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
+    username = db.Column(db.String(150), unique=True, nullable=False)  # increased
     password_hash = db.Column(db.String(128))
-    profile_pic = db.Column(db.String(150), nullable=True)  # NEW
+    profile_pic = db.Column(db.String(150), nullable=True)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -25,9 +25,7 @@ class User(UserMixin, db.Model):
         return check_password_hash(self.password_hash, password)
     
     def get_profile_pic(self):
-        # Returns the path to profile picture or default
         return url_for('static', filename='profile_pics/' + self.profile_pic) if self.profile_pic else url_for('static', filename='profile_pics/default.png')
-
 
 
 class Tag(db.Model):
@@ -37,23 +35,22 @@ class Tag(db.Model):
 
 class Post(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(120), nullable=False)
+    title = db.Column(db.String(256), nullable=False)  # increased
     content = db.Column(db.Text, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
-    edited = db.Column(db.Boolean, default=False)  # NEW: mark if post was edited
-    solved = db.Column(db.Boolean, default=False)  # NEW: mark if question is solved
+    edited = db.Column(db.Boolean, default=False)
+    solved = db.Column(db.Boolean, default=False)
 
     user = db.relationship('User', backref=db.backref('posts', lazy=True))
     tags = db.relationship('Tag', secondary=post_tags, backref=db.backref('posts', lazy='dynamic'))
-
 
 
 class Comment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     content = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
-    edited = db.Column(db.Boolean, default=False)  # NEW: mark if comment was edited
+    edited = db.Column(db.Boolean, default=False)
 
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     post_id = db.Column(db.Integer, db.ForeignKey('post.id'), nullable=False)
@@ -61,7 +58,6 @@ class Comment(db.Model):
 
     user = db.relationship('User', backref=db.backref('comments', lazy=True))
     post = db.relationship('Post', backref=db.backref('comments', lazy='dynamic'))
-
     replies = db.relationship(
         'Comment',
         backref=db.backref('parent', remote_side=[id]),
