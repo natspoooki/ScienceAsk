@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block content %}
+  {% if not current_user.is_authenticated %}
+    <a href="{{ url_for('login') }}">Login</a> or <a href="{{ url_for('register') }}">Create Account</a>
+  {% endif %}
+
+  <h2>Choose a Discipline</h2>
+  {% set icon_map = {
+    'math': 'fa-square-root-alt',
+    'physics': 'fa-atom',
+    'chemistry': 'fa-flask',
+    'biology': 'fa-dna',
+    'computer science': 'fa-laptop-code',
+    'economics': 'fa-chart-line',
+    'medicine': 'fa-stethoscope',
+    'statistics': 'fa-chart-bar',
+    'robotics': 'fa-robot',
+    'engineering': 'fa-gears'
+  } %}
+  
+  
+  <h2>Disciplines</h2>
+  
+  <ul style="list-style-type:none; padding-left: 0;">
+    {% for discipline in disciplines %}
+      <li style="display: flex; align-items: center; margin-bottom: 10px;">
+        <i class="fas {{ icon_map[discipline] }}" style="width: 20px; min-width: 20px; margin-right: 10px;"></i>
+        <a href="{{ url_for('dashboard', tag=discipline) }}" style="text-decoration: none; color: inherit;">
+          {{ discipline|capitalize }}
+        </a>
+      </li>
+    {% endfor %}
+  </ul>
+  
+  
+  
+  
+{% endblock %}

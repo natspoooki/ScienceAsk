@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+{% block content %}
+  <h2>Posts in {{ tag|capitalize }}</h2>
+
+  <a href="{{ url_for('home') }}">Back to disciplines</a><br><br>
+
+  {% if current_user.is_authenticated %}
+    <span id="toggle-post-form" class="toggle-link">Create a post</span>
+
+    <div id="post-form-container" class="hidden">
+      <form method="POST" action="{{ url_for('submit') }}">
+        <input type="text" name="title" placeholder="Post title" required><br><br>
+        <textarea name="content" placeholder="Write something..." required></textarea><br><br>
+
+        <input type="hidden" name="tag" value="{{ tag }}">
+
+        <label for="additional_tags">Add up to 4 additional disciplines:</label><br>
+<select id="additional_tags" name="additional_tags" multiple size="6" style="width: 200px;">
+  {% for discipline in disciplines %}
+    {% if discipline != tag %}
+      <option value="{{ discipline }}">{{ discipline|capitalize }}</option>
+    {% endif %}
+  {% endfor %}
+</select><br>
+<small>Press Ctrl (Cmd on Mac) + Click to select multiple disciplines. You can select up to 4 additional disciplines.</small><br><br>
+
+        </div>
+
+        <button type="submit">Submit</button>
+      </form>
+      <hr>
+    </div>
+
+    <script>
+      const togglePostForm = document.getElementById('toggle-post-form');
+      const postFormContainer = document.getElementById('post-form-container');
+
+      togglePostForm.addEventListener('click', (e) => {
+        if (postFormContainer.classList.contains('hidden')) {
+          postFormContainer.classList.remove('hidden');
+          togglePostForm.textContent = 'Hide form';
+        } else {
+          postFormContainer.classList.add('hidden');
+          togglePostForm.textContent = 'Create a post';
+          // Also reset additional tags UI when hiding form:
+          document.getElementById('additional_tags_toggle').checked = false;
+          document.getElementById('additional_tags_container').classList.add('hidden');
+          // Clear selections:
+          Array.from(document.getElementById('additional_tags').options).forEach(opt => opt.selected = false);
+        }
+      });
+
+      const additionalTagsToggle = document.getElementById('additional_tags_toggle');
+      const additionalTagsContainer = document.getElementById('additional_tags_container');
+      const additionalTagsSelect = document.getElementById('additional_tags');
+
+      additionalTagsToggle.addEventListener('change', function() {
+        if (this.checked) {
+          additionalTagsContainer.classList.remove('hidden');
+        } else {
+          additionalTagsContainer.classList.add('hidden');
+          // Clear selected options when hidden
+          Array.from(additionalTagsSelect.options).forEach(opt => opt.selected = false);
+        }
+      });
+
+      additionalTagsSelect.addEventListener('change', function() {
+        const selectedOptions = Array.from(this.selectedOptions);
+        if (selectedOptions.length > 4) {
+          alert('You can select up to 4 additional disciplines only.');
+          selectedOptions[selectedOptions.length - 1].selected = false;
+        }
+      });
+
+      function toggleComments(postId) {
+        const commentsDiv = document.getElementById('comments-' + postId);
+        if (commentsDiv.style.display === 'none' || commentsDiv.style.display === '') {
+          commentsDiv.style.display = 'block';
+        } else {
+          commentsDiv.style.display = 'none';
+        }
+      }
+    </script>
+  {% else %}
+    <p><a href="{{ url_for('login') }}">Log in</a> to submit a post.</p>
+  {% endif %}
+
+  {% if posts %}
+    {% for post in posts %}
+      <div class="post" style="margin-bottom: 20px; padding: 10px; border: 1px solid #ccc;">
+        <h3><a href="{{ url_for('post_detail', post_id=post.id) }}">{{ post.title }}</a></h3>
+        {% if post.edited %}
+  <span style="color: gray; font-size:0.9em;">(edited)</span>
+{% endif %}
+
+{% if post.solved %}
+  <span style="color: green; font-weight:bold; margin-left:10px;">SOLVED</span>
+{% else %}
+  {% if current_user.id == post.user_id %}
+    <a href="{{ url_for('toggle_solved', post_id=post.id) }}" style="color: orange; font-weight:bold; margin-left:10px;">Mark as Solved</a>
+  {% endif %}
+{% endif %}
+
+        <p>
+  by <a href="{{ url_for('profile', username=post.user.username) }}">
+      <img src="{{ post.user.get_profile_pic() }}" alt="Profile Picture"
+           style="height:20px; width:20px; border-radius:50%; vertical-align:middle; margin-right:5px;">
+      {{ post.user.username }}
+  </a> on {{ post.created_at.strftime('%Y-%m-%d %H:%M:%S') }}
+</p>
+
+        <p>Tags:
+          {% for t in post.tags %}
+            {{ t.name }}{% if not loop.last %}, {% endif %}
+          {% endfor %}
+        </p>
+
+        <button class="toggle-comments-btn" onclick="toggleComments({{ post.id }})">
+          Show/Hide Comments
+        </button>
+
+        <div class="comments" id="comments-{{ post.id }}" style="display:none; margin-left: 20px; border-left: 2px solid #999; padding-left: 10px;">
+          {% if post.sorted_comments %}
+            {% for comment in post.sorted_comments %}
+              <div class="comment" style="margin-bottom: 10px;">
+                <p>
+                  <a href="{{ url_for('profile', username=comment.user.username) }}">
+  <img src="{{ comment.user.get_profile_pic() }}" alt="Profile Picture"
+       style="height:18px; width:18px; border-radius:50%; vertical-align:middle; margin-right:5px;">
+  {{ comment.user.username }}
+</a>
+
+                  <small style="color: gray; font-size: 0.8em;">
+                    ({{ comment.created_at.strftime('%Y-%m-%d %H:%M') }})
+                  </small>: {{ comment.content }}
+                </p>
+                {% if current_user.id == comment.user_id %}
+  <a href="{{ url_for('edit_comment', comment_id=comment.id) }}" style="font-size:0.8em; margin-left:5px;">Edit</a>
+{% endif %}
+                {% if comment.edited %}
+  <span style="color: gray; font-size:0.8em;">(edited)</span>
+{% endif %}
+
+
+
+              </div>
+            {% endfor %}
+          {% else %}
+            <p>No comments yet.</p>
+          {% endif %}
+
+          {% if current_user.is_authenticated %}
+            <form method="POST" action="{{ url_for('comment', post_id=post.id) }}">
+              <input type="text" name="content" placeholder="Add a comment" required>
+              <button type="submit">Post</button>
+            </form>
+          {% endif %}
+        </div>
+      </div>
+    {% endfor %}
+  {% else %}
+    <p>No posts yet in this discipline.</p>
+  {% endif %}
+
+{% endblock %}

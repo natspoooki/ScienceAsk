@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h2>{{ user.username }}'s Profile</h2>
+  <img src="{{ user.get_profile_pic() }}" alt="Profile Picture"
+       style="height:100px; width:100px; border-radius:50%; margin-bottom:15px;">
+  
+  <h3>Posts by {{ user.username }}:</h3>
+  {% if user.posts %}
+    {% for post in user.posts|sort(attribute='created_at', reverse=True) %}
+      <div class="post" style="margin-bottom:15px;">
+        <h4><a href="{{ url_for('post_detail', post_id=post.id) }}">{{ post.title }}</a></h4>
+        <p>{{ post.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+      </div>
+    {% endfor %}
+  {% else %}
+    <p>No posts yet.</p>
+  {% endif %}
+{% endblock %}

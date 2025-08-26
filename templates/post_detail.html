@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h2>{{ post.title }}</h2>
+  {% if post.edited %}
+  <span style="color: gray; font-size:0.9em;">(edited)</span>
+{% endif %}
+
+{% if post.solved %}
+  <span style="color: green; font-weight:bold; margin-left:10px;">SOLVED</span>
+{% else %}
+  {% if current_user.id == post.user_id %}
+    <a href="{{ url_for('toggle_solved', post_id=post.id) }}" style="color: orange; font-weight:bold; margin-left:10px;">Mark as Solved</a>
+  {% endif %}
+{% endif %}
+
+  <p>
+  by <a href="{{ url_for('profile', username=post.user.username) }}">
+      <img src="{{ post.user.get_profile_pic() }}" alt="Profile Picture"
+           style="height:20px; width:20px; border-radius:50%; vertical-align:middle; margin-right:5px;">
+      {{ post.user.username }}
+  </a> on {{ post.created_at.strftime('%Y-%m-%d %H:%M:%S') }}
+</p>
+
+  <p>Tag: {{ post.tag }}</p>
+
+  <div style="margin-top: 20px;">
+    <p>{{ post.content }}</p>
+  </div>
+  {% if current_user.id == post.user_id %}
+  <a href="{{ url_for('edit_post', post_id=post.id) }}" style="font-size:0.9em; margin-left:10px;">Edit</a>
+{% endif %}
+
+
+  <hr>
+
+  <h2>Comments</h2>
+
+  <h3>Leave a Comment</h3>
+  <form method="POST" action="{{ url_for('comment', post_id=post.id) }}">
+    <textarea name="content" rows="3" cols="60" placeholder="Add a comment..."></textarea><br>
+    <button type="submit">Submit</button>
+  </form>
+
+  {% for comment in post.comments if not comment.parent %}
+    <div class="comment" style="margin-bottom: 10px; padding-left: 10px; border-left: 3px solid black;">
+
+      <p><a href="{{ url_for('profile', username=comment.user.username) }}">
+  <img src="{{ comment.user.get_profile_pic() }}" alt="Profile Picture"
+       style="height:18px; width:18px; border-radius:50%; vertical-align:middle; margin-right:5px;">
+  {{ comment.user.username }}
+</a>
+ ({{ comment.created_at.strftime('%Y-%m-%d %H:%M') }})</p>
+      <p>{{ comment.content }}</p>
+      {% if current_user.id == comment.user_id %}
+  <a href="{{ url_for('edit_comment', comment_id=comment.id) }}" style="font-size:0.8em; margin-left:5px;">Edit</a>
+{% endif %}
+</br>
+      {% if comment.edited %}
+  <span style="color: gray; font-size:0.8em;">(edited)</span>
+{% endif %}
+
+
+      <!-- Reply toggle link -->
+      <a href="javascript:void(0);" onclick="toggleReplyForm({{ comment.id }})" id="toggle-link-{{ comment.id }}" style="color: blue; cursor: pointer;">reply</a>
+
+      <div id="reply-form-{{ comment.id }}" style="display:none; margin-top: 10px;">
+        <form method="POST" action="{{ url_for('comment', post_id=post.id) }}">
+          <input type="hidden" name="parent_id" value="{{ comment.id }}">
+          <textarea name="content" placeholder="Write a reply..." rows="2" cols="50"></textarea><br>
+          <button type="submit">Submit Reply</button>
+        </form>
+      </div>
+
+      <!-- Replies list -->
+      {% if comment.replies.count() > 0 %}
+        <a href="javascript:void(0);" onclick="toggleReplies({{ comment.id }})" id="toggle-replies-link-{{ comment.id }}" style="display:block; margin-top:5px; color: blue; cursor: pointer;">
+          show replies ({{ comment.replies.count() }})
+        </a>
+        <div id="replies-{{ comment.id }}" style="display:none; margin-top: 5px;">
+          {% for reply in comment.replies.order_by(Comment.created_at.asc()) %}
+            <div class="reply">
+              <p><a href="{{ url_for('profile', username=comment.user.username) }}">
+  <img src="{{ comment.user.get_profile_pic() }}" alt="Profile Picture"
+       style="height:18px; width:18px; border-radius:50%; vertical-align:middle; margin-right:5px;">
+  {{ comment.user.username }}
+</a>
+ ({{ reply.created_at.strftime('%Y-%m-%d %H:%M') }})</p>
+              <p>{{ reply.content }}</p>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+    </div>
+  {% endfor %}
+
+  <br>
+  <a href="{{ url_for('dashboard', tag=post.tag) }}">Back to {{ post.tag|capitalize }} posts</a>
+
+  <script>
+    function toggleReplyForm(commentId) {
+      const form = document.getElementById('reply-form-' + commentId);
+      const link = document.getElementById('toggle-link-' + commentId);
+      if (form.style.display === 'none' || form.style.display === '') {
+        form.style.display = 'block';
+        link.textContent = 'collapse';
+      } else {
+        form.style.display = 'none';
+        link.textContent = 'reply';
+      }
+    }
+
+    function toggleReplies(commentId) {
+      const replies = document.getElementById('replies-' + commentId);
+      const link = document.getElementById('toggle-replies-link-' + commentId);
+      if (replies.style.display === 'none' || replies.style.display === '') {
+        replies.style.display = 'block';
+        link.textContent = 'hide replies (' + replies.children.length + ')';
+      } else {
+        replies.style.display = 'none';
+        link.textContent = 'show replies (' + replies.children.length + ')';
+      }
+    }
+  </script>
+
+{% endblock %}

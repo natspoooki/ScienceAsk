@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+<hr>
+
+{% for post in posts %}
+    <div>
+        <h2>{{ post.title }}</h2>
+        <p>{{ post.content }}</p>
+        <p><em>
+  by <a href="{{ url_for('profile', username=post.user.username) }}">
+      <img src="{{ post.user.get_profile_pic() }}" alt="Profile Picture"
+           style="height:20px; width:20px; border-radius:50%; vertical-align:middle; margin-right:5px;">
+      {{ post.user.username }}
+  </a> on {{ post.created_at.strftime('%Y-%m-%d %H:%M:%S') }}
+</em></p>
+
+
+        <!-- Comments Section -->
+        <button onclick="toggleComments({{ post.id }})" style="margin-bottom: 10px;">
+            Show/Hide Comments
+          </button>
+          
+        <div class="comments" id="comments-{{ post.id }}" style="display:none;">
+            <h4>Comments:</h4>
+            {% for comment in post.sorted_comments %}
+                <p>
+                    <a href="{{ url_for('profile', username=comment.user.username) }}">
+  <img src="{{ comment.user.get_profile_pic() }}" alt="Profile Picture"
+       style="height:18px; width:18px; border-radius:50%; vertical-align:middle; margin-right:5px;">
+  {{ comment.user.username }}
+</a>
+
+                    <small style="color: gray; font-size: 0.8em;">
+                        ({{ comment.created_at.strftime('%Y-%m-%d %H:%M') }})
+                    </small>:
+                    {{ comment.content }}
+                </p>
+              
+            {% else %}
+                <p>No comments yet.</p>
+            {% endfor %}
+
+            {% if current_user.is_authenticated %}
+                <form method="POST" action="{{ url_for('comment', post_id=post.id) }}">
+                    <input type="text" name="content" placeholder="Add a comment" required>
+                    <button type="submit">Post</button>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+    <hr>
+{% endfor %}
+<script>
+    function toggleComments(postId) {
+      const commentsDiv = document.getElementById('comments-' + postId);
+      if (commentsDiv.style.display === 'none') {
+        commentsDiv.style.display = 'block';
+      } else {
+        commentsDiv.style.display = 'none';
+      }
+    }
+  </script>  
+{% endblock %}

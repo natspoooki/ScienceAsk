@@ -1,0 +1,230 @@
+/* Light mode (default) */
+body {
+  background-color: white;
+  color: black;
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0 20px;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Links */
+a {
+  color: #007bff;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+/* Posts and comments container */
+.post, .comment {
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  padding: 15px 20px;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Comments container nested inside posts */
+.comments {
+  margin-left: 20px;
+  border-left: 3px solid #ccc;
+  padding-left: 15px;
+  margin-bottom: 15px;
+}
+
+/* Buttons */
+button {
+  background-color: #007bff;
+  border: none;
+  padding: 10px 16px;
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.3s ease;
+}
+button:hover {
+  background-color: #0056b3;
+}
+
+/* Forms */
+textarea, input[type="text"], input[type="password"], input[type="email"], select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  box-sizing: border-box;
+  margin-bottom: 15px;
+  font-size: 1rem;
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+/* Form labels and toggles */
+label {
+  font-weight: 600;
+  display: block;
+  margin-bottom: 6px;
+}
+
+/* Toggle links/buttons for show/hide */
+.toggle-link {
+  cursor: pointer;
+  color: #007bff;
+  font-weight: 600;
+  text-decoration: underline;
+  margin-top: 10px;
+  display: inline-block;
+  transition: color 0.3s ease;
+}
+.toggle-link:hover {
+  color: #0056b3;
+}
+
+/* Horizontal rule */
+hr {
+  border: none;
+  border-top: 1px solid #ddd;
+  margin: 25px 0;
+  transition: border-color 0.3s ease;
+}
+
+/* Hidden containers */
+.hidden {
+  display: none !important;
+}
+
+/* Dark mode overrides */
+body.dark-mode {
+  background-color: #0d1532;
+  color: #e0e0e0;
+}
+
+body.dark-mode a {
+  color: #66aaff;
+}
+body.dark-mode a:hover {
+  color: #aaccff;
+  text-decoration: underline;
+}
+
+body.dark-mode .post, 
+body.dark-mode .comment {
+  background-color: #1e1e1e;
+  border: 1px solid #333;
+}
+
+body.dark-mode .comments {
+  border-left-color: #555;
+}
+
+body.dark-mode textarea,
+body.dark-mode input[type="text"],
+body.dark-mode input[type="password"],
+body.dark-mode input[type="email"],
+body.dark-mode select {
+  background-color: #2a2a2a;
+  border: 1px solid #555;
+  color: #ddd;
+}
+
+body.dark-mode button {
+  background-color: #3399ff;
+  color: white;
+}
+body.dark-mode button:hover {
+  background-color: #66b3ff;
+}
+
+body.dark-mode hr {
+  border-top-color: #444;
+}
+
+/* Dark mode toggle button styling */
+#darkModeToggle {
+  position: fixed;
+  top: 15px;
+  right: 15px;
+  background-color: #222;
+  border: none;
+  padding: 10px 14px;
+  color: #eee;
+  cursor: pointer;
+  border-radius: 5px;
+  z-index: 9999;
+  font-weight: bold;
+  box-shadow: 0 0 8px rgba(0,0,0,0.5);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+body.dark-mode #darkModeToggle {
+  background-color: #66aaff;
+  color: #121212;
+}
+
+/* Additional spacing for post form container */
+#post-form-container {
+  margin-top: 15px;
+  margin-bottom: 30px;
+}
+
+/* Textarea resize control */
+textarea {
+  resize: vertical;
+  min-height: 100px;
+  font-family: inherit;
+}
+
+/* Styling for select dropdown if added */
+select {
+  appearance: none;
+  background-color: white;
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg fill='gray' height='16' viewBox='0 0 24 24' width='16' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px 16px;
+  padding-right: 30px;
+}
+body.dark-mode select {
+  background-color: #2a2a2a;
+  color: #ddd;
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg fill='%23ddd' height='16' viewBox='0 0 24 24' width='16' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+}
+
+/* Reply styling */
+.reply {
+  margin-left: 20px;
+  padding-left: 10px;
+  border-left: 2px solid black;
+  padding: 5px;
+  margin-bottom: 5px;
+  background-color: #f9f9f9; /* Light mode */
+  border-radius: 6px;
+}
+
+/* Dark mode for replies */
+body.dark-mode .reply {
+  background-color: #1e1e1e;
+  border-left-color: #555;
+}
+
+
+/* Make sure toggle comment buttons have some spacing */
+button.toggle-comments-btn {
+  margin-bottom: 15px;
+}
+
+/* Style for the post title links */
+.post h3 a {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+.post h3 a:hover {
+  color: #0056b3;
+}
+body.dark-mode .post h3 a:hover {
+  color: #66aaff;
+}
