@@ -545,7 +545,7 @@ def edit_comment(comment_id):
 
     return render_template('edit_comment.html', comment=comment)
 
-@app.route('/resend-verification/<int:user_id>')
+@app.route('/resend-verification/<int:user_id>', methods=['POST'])
 def resend_verification(user_id):
     user = User.query.get_or_404(user_id)
     if user.confirmed:
