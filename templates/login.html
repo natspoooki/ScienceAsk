@@ -1,21 +1,43 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Login</h2>
+
 {% with messages = get_flashed_messages(with_categories=true) %}
-  {% if messages %}
-    {% for category, message in messages %}
-      <div class="flash {{ category }}">{{ message }}</div>
-    {% endfor %}
-  {% endif %}
+    {% if messages %}
+        <ul class="flashes">
+            {% for category, message in messages %}
+                <li class="{{ category }}">{{ message|safe }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
 {% endwith %}
 
 <form method="POST" action="{{ url_for('login') }}">
     <input type="text" name="username" placeholder="Username" required>
     <input type="password" name="password" placeholder="Password" required>
-    <button type="submit">Login</button>
+    <button type="submit">Log In</button>
 </form>
 
-{% if unverified_user %}
-    <p>Your account is not verified.
-       <a href="{{ url_for('resend_verification', user_id=unverified_user.id) }}">
-           Resend verification email
-       </a>
-    </p>
+{% if resend_email_user %}
+    <div class="verify-warning">
+        <p>Your account is not verified yet. Didn't receive the email?</p>
+        <form method="POST" action="{{ url_for('resend_verification') }}">
+            <input type="hidden" name="email" value="{{ resend_email_user.email }}">
+            <button type="submit">Resend Verification Email</button>
+        </form>
+    </div>
 {% endif %}
+
+<a href="{{ url_for('register') }}">Don't have an account? Register</a>
+
+<style>
+    .flashes { list-style: none; padding: 0; margin-bottom: 15px; }
+    .flashes li { padding: 10px; border-radius: 5px; margin-bottom: 10px; }
+    .success { background-color: #d4edda; color: #155724; }
+    .danger { background-color: #f8d7da; color: #721c24; }
+    .warning { background-color: #fff3cd; color: #856404; }
+    .verify-warning { background-color: #fff3cd; padding: 15px; border-radius: 5px; margin-top: 10px; }
+    .verify-warning button { margin-top: 10px; background-color: #ffc107; border: none; padding: 8px 12px; cursor: pointer; border-radius: 5px; color: #000; }
+</style>
+{% endblock %}
