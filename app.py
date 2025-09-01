@@ -372,34 +372,41 @@ def register():
         username = request.form['username']
         email = request.form['email']
         password = request.form['password']
-        # profile_pic handling...
-        
-        existing_user = User.query.filter_by(username=username).first()
-        if existing_user:
-            flash("Username already taken")
+
+        # Check if username/email exists
+        if User.query.filter_by(username=username).first():
+            flash("Username already taken", "danger")
             return redirect(url_for('register'))
-        
-        existing_email = User.query.filter_by(email=email).first()
-        if existing_email:
-            flash("Email already registered")
+
+        if User.query.filter_by(email=email).first():
+            flash("Email already registered", "danger")
             return redirect(url_for('register'))
-        
+
+        # Create user
         user = User(username=username, email=email)
         user.password_hash = generate_password_hash(password)
+
+        # Handle profile picture
+        if 'profile_pic' in request.files:
+            pic = request.files['profile_pic']
+            if pic.filename:
+                filename = secure_filename(pic.filename)
+                filepath = os.path.join('static/profile_pics', filename)
+                os.makedirs(os.path.dirname(filepath), exist_ok=True)
+                pic.save(filepath)
+                user.profile_pic = filename
+
         db.session.add(user)
         db.session.commit()
 
-        token = generate_confirmation_token(user.email)
-        confirm_url = url_for('confirm_email', token=token, _external=True)
-        html = render_template('email/activate.html', confirm_url=confirm_url, user=user)
-        subject = "Please confirm your email"
+        # Send verification email
+        send_confirmation_email(user)
 
-        send_email(user.email, subject, html)
-
-        flash("A confirmation email has been sent to your email address.")
+        flash("Registration successful! A confirmation email has been sent.", "success")
         return redirect(url_for('login'))
-    
+
     return render_template('register.html')
+
 
 @app.route('/confirm/<token>')
 def confirm_email(token):
@@ -428,17 +435,25 @@ def login():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
+
         user = User.query.filter_by(username=username).first()
+
+        # Check credentials
         if user and user.check_password(password):
+            # Not verified yet → show message + link
             if not user.confirmed:
-                flash('Please confirm your email first.', 'warning')
-                return redirect(url_for('login'))
+                flash('Your email is not verified.', 'warning')
+                return render_template('login.html', unverified_user=user)
+
+            # Verified → log in
             login_user(user)
             return redirect(url_for('home'))
         else:
-            flash('Invalid username or password')
+            flash('Invalid username or password', 'danger')
             return redirect(url_for('login'))
+
     return render_template('login.html')
+
 
 @app.route('/logout')
 @login_required
@@ -515,6 +530,18 @@ def edit_comment(comment_id):
         return redirect(url_for('post_detail', post_id=comment.post_id))
 
     return render_template('edit_comment.html', comment=comment)
+
+@app.route('/resend-verification/<int:user_id>')
+def resend_verification(user_id):
+    user = User.query.get_or_404(user_id)
+    if user.confirmed:
+        flash("Email is already verified.", "info")
+        return redirect(url_for('login'))
+
+    send_confirmation_email(user)
+    flash("A new verification email has been sent.", "success")
+    return redirect(url_for('login'))
+
 
 # ----------------------------
 # Toggle solved
