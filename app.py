@@ -463,7 +463,8 @@ def login():
         else:
             flash('Invalid username or password', 'danger')
 
-    return render_template('login.html', resend_email_user=resend_email_user)
+    return render_template('login.html', resend_email_user=user)
+
 
 
 

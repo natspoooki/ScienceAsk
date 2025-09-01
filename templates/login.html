@@ -22,10 +22,10 @@
 {% if resend_email_user %}
     <div class="verify-warning">
         <p>Your account is not verified yet. Didn't receive the email?</p>
-        <form method="POST" action="{{ url_for('resend_verification') }}">
-            <input type="hidden" name="email" value="{{ resend_email_user.email }}">
-            <button type="submit">Resend Verification Email</button>
-        </form>
+        <form method="POST" action="{{ url_for('resend_verification', user_id=resend_email_user.id) }}">
+    <button type="submit">Resend Verification Email</button>
+</form>
+
     </div>
 {% endif %}
 
