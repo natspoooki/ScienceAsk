@@ -180,7 +180,7 @@ def fetch_doi_metadata(doi: str) -> dict | None:
 def test_email():
     msg = Message("Test Email", recipients=["rietakahashinew@gmail.com"])
     msg.body = "This is a test email from your Flask app."
-    try:
+    try:    
         mail.send(msg)
         return "Email sent successfully!"
     except Exception as e:
@@ -423,9 +423,9 @@ def register():
 
 @app.route('/confirm/<token>')
 def confirm_email(token):
-    try:
-        email = confirm_token(token)
-    except:
+    email = confirm_token(token)
+
+    if not email:
         flash('The confirmation link is invalid or has expired.', 'danger')
         return redirect(url_for('login'))
     
@@ -436,11 +436,11 @@ def confirm_email(token):
     else:
         user.confirmed = True
         user.confirmed_on = datetime.utcnow()
-        db.session.add(user)
         db.session.commit()
         flash('You have confirmed your account! Thanks!', 'success')
     
     return redirect(url_for('login'))
+
 
 
 @app.route('/login', methods=['GET', 'POST'])
