@@ -19,10 +19,23 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 app.config['SECURITY_PASSWORD_SALT'] = os.getenv('SECURITY_PASSWORD_SALT')
 
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
-    'DATABASE_URL',  # Render provides this automatically in production
-    'sqlite:///C:\\Users\\tomas\\reddit_clone\\instance\\reddit.db'  # fallback for local testing
-)
+
+# ----------------------------
+# Database config with SSL for Render
+# ----------------------------
+db_url = os.environ.get("DATABASE_URL")
+if db_url:
+    # Render often gives 'postgres://', SQLAlchemy needs 'postgresql://'
+    if db_url.startswith("postgres://"):
+        db_url = db_url.replace("postgres://", "postgresql://", 1)
+    # Ensure SSL is required
+    if "sslmode=" not in db_url:
+        db_url += "?sslmode=require"
+else:
+    # Fallback for local testing
+    db_url = 'sqlite:///C:\\Users\\tomas\\reddit_clone\\instance\\reddit.db'
+
+app.config['SQLALCHEMY_DATABASE_URI'] = db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
