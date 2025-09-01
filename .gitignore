@@ -4,6 +4,7 @@ __pycache__/
 *.pyo
 
 /instance
+/migrations
 *.db
 
 # Virtual env
