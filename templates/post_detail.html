@@ -1,8 +1,8 @@
 {% extends "base.html" %}
 
 {% block content %}
-  <h2>{{ post.title }}</h2>
-  {% if post.edited %}
+<h2>{{ post.title }}</h2>
+{% if post.edited %}
   <span style="color: gray; font-size:0.9em;">(edited)</span>
 {% endif %}
 
@@ -14,7 +14,7 @@
   {% endif %}
 {% endif %}
 
-  <p>
+<p>
   by <a href="{{ url_for('profile', username=post.user.username) }}">
       <img src="{{ post.user.get_profile_pic() }}" alt="Profile Picture"
            style="height:20px; width:20px; border-radius:50%; vertical-align:middle; margin-right:5px;">
@@ -22,106 +22,278 @@
   </a> on {{ post.created_at.strftime('%Y-%m-%d %H:%M:%S') }}
 </p>
 
-  <p>Tag: {{ post.tag }}</p>
+<div style="margin-top: 20px;">
+  <p>{{ post.content }}</p>
+</div>
 
-  <div style="margin-top: 20px;">
-    <p>{{ post.content }}</p>
+{% if post.dois %}
+  <div class="references-box">
+    <strong>References:</strong>
+    <ul style="margin:6px 0 0 18px;">
+      {% for d in post.dois %}
+        <li>
+          {% if d.title %}<em>{{ d.title }}</em>{% else %}{{ d.identifier }}{% endif %}
+          {% if d.year %} ({{ d.year }}){% endif %}
+          {% if d.authors %} — {{ d.authors }}{% endif %}
+          {% if d.url %} — <a href="{{ d.url }}" target="_blank">{{ d.identifier }}</a>{% endif %}
+        </li>
+      {% endfor %}
+    </ul>
   </div>
-  {% if current_user.id == post.user_id %}
-  <a href="{{ url_for('edit_post', post_id=post.id) }}" style="font-size:0.9em; margin-left:10px;">Edit</a>
 {% endif %}
 
+<p><strong>Tags:</strong>
+  {% if post.tags %}
+    {% for t in post.tags %}
+      <span class="tag-badge">
+        {{ t.name|capitalize }}
+      </span>
+    {% endfor %}
+  {% else %}
+    None
+  {% endif %}
+</p>
 
-  <hr>
 
-  <h2>Comments</h2>
-
-  <h3>Leave a Comment</h3>
-  <form method="POST" action="{{ url_for('comment', post_id=post.id) }}">
-    <textarea name="content" rows="3" cols="60" placeholder="Add a comment..."></textarea><br>
-    <button type="submit">Submit</button>
-  </form>
-
-  {% for comment in post.comments if not comment.parent %}
-    <div class="comment" style="margin-bottom: 10px; padding-left: 10px; border-left: 3px solid black;">
-
-      <p><a href="{{ url_for('profile', username=comment.user.username) }}">
-  <img src="{{ comment.user.get_profile_pic() }}" alt="Profile Picture"
-       style="height:18px; width:18px; border-radius:50%; vertical-align:middle; margin-right:5px;">
-  {{ comment.user.username }}
-</a>
- ({{ comment.created_at.strftime('%Y-%m-%d %H:%M') }})</p>
-      <p>{{ comment.content }}</p>
-      {% if current_user.id == comment.user_id %}
-  <a href="{{ url_for('edit_comment', comment_id=comment.id) }}" style="font-size:0.8em; margin-left:5px;">Edit</a>
-{% endif %}
-</br>
-      {% if comment.edited %}
-  <span style="color: gray; font-size:0.8em;">(edited)</span>
+{% if current_user.id == post.user_id %}
+  <div style="margin-top:6px;">
+    <a href="{{ url_for('edit_post', post_id=post.id) }}" style="font-size:0.9em; margin-left:10px;">Edit</a>
+  </div>
 {% endif %}
 
+<hr>
 
-      <!-- Reply toggle link -->
-      <a href="javascript:void(0);" onclick="toggleReplyForm({{ comment.id }})" id="toggle-link-{{ comment.id }}" style="color: blue; cursor: pointer;">reply</a>
+<h2>Comments</h2>
 
-      <div id="reply-form-{{ comment.id }}" style="display:none; margin-top: 10px;">
-        <form method="POST" action="{{ url_for('comment', post_id=post.id) }}">
-          <input type="hidden" name="parent_id" value="{{ comment.id }}">
-          <textarea name="content" placeholder="Write a reply..." rows="2" cols="50"></textarea><br>
-          <button type="submit">Submit Reply</button>
-        </form>
-      </div>
-
-      <!-- Replies list -->
-      {% if comment.replies.count() > 0 %}
-        <a href="javascript:void(0);" onclick="toggleReplies({{ comment.id }})" id="toggle-replies-link-{{ comment.id }}" style="display:block; margin-top:5px; color: blue; cursor: pointer;">
-          show replies ({{ comment.replies.count() }})
-        </a>
-        <div id="replies-{{ comment.id }}" style="display:none; margin-top: 5px;">
-          {% for reply in comment.replies.order_by(Comment.created_at.asc()) %}
-            <div class="reply">
-              <p><a href="{{ url_for('profile', username=comment.user.username) }}">
-  <img src="{{ comment.user.get_profile_pic() }}" alt="Profile Picture"
-       style="height:18px; width:18px; border-radius:50%; vertical-align:middle; margin-right:5px;">
-  {{ comment.user.username }}
-</a>
- ({{ reply.created_at.strftime('%Y-%m-%d %H:%M') }})</p>
-              <p>{{ reply.content }}</p>
-            </div>
-          {% endfor %}
-        </div>
-      {% endif %}
-
+<h3>Leave a Comment</h3>
+<form method="POST" action="{{ url_for('comment', post_id=post.id) }}">
+  <textarea name="content" rows="3" cols="60" placeholder="Add a comment..." required></textarea><br>
+  <div id="comment-doi-list">
+    <div class="doi-row" style="margin-bottom:6px;">
+      <input type="text" name="dois[]" class="doi-input" placeholder="10.xxxx/xxxx or https://doi.org/..." style="width:340px;" required>
+      <div class="preview" style="font-size:0.9em; color:#333; margin-top:4px;"></div>
     </div>
-  {% endfor %}
+  </div>
+  <button type="button" id="add-comment-doi">+ Add another DOI</button>
+  <br><br>
+  <button type="submit">Submit</button>
+</form>
 
-  <br>
-  <a href="{{ url_for('dashboard', tag=post.tag) }}">Back to {{ post.tag|capitalize }} posts</a>
+{% for comment in post.comments if not comment.parent %}
+  <div class="comment" style="margin-bottom: 14px; padding-left: 10px; border-left: 3px solid black;">
 
-  <script>
-    function toggleReplyForm(commentId) {
-      const form = document.getElementById('reply-form-' + commentId);
-      const link = document.getElementById('toggle-link-' + commentId);
-      if (form.style.display === 'none' || form.style.display === '') {
-        form.style.display = 'block';
-        link.textContent = 'collapse';
-      } else {
-        form.style.display = 'none';
-        link.textContent = 'reply';
+    <p>
+      <a href="{{ url_for('profile', username=comment.user.username) }}">
+        <img src="{{ comment.user.get_profile_pic() }}" alt="Profile Picture"
+             style="height:18px; width:18px; border-radius:50%; vertical-align:middle; margin-right:5px;">
+        {{ comment.user.username }}
+      </a>
+      ({{ comment.created_at.strftime('%Y-%m-%d %H:%M') }})
+      {% if current_user.id == comment.user_id %}
+        <a href="{{ url_for('edit_comment', comment_id=comment.id) }}" style="font-size:0.8em; margin-left:5px;">Edit</a>
+      {% endif %}
+      {% if comment.edited %}
+        <span style="color: gray; font-size:0.8em;">(edited)</span>
+      {% endif %}
+    </p>
+
+    <p>{{ comment.content }}</p>
+
+    {% if comment.dois %}
+      <div class="references-box">
+        <strong>References:</strong>
+        <ul style="margin:6px 0 0 18px;">
+          {% for d in comment.dois %}
+            <li>
+              {% if d.title %}<em>{{ d.title }}</em>{% else %}{{ d.identifier }}{% endif %}
+              {% if d.year %} ({{ d.year }}){% endif %}
+              {% if d.authors %} — {{ d.authors }}{% endif %}
+              {% if d.url %} — <a href="{{ d.url }}" target="_blank">{{ d.identifier }}</a>{% endif %}
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+
+    <a href="javascript:void(0);" onclick="toggleReplyForm({{ comment.id }})" id="toggle-link-{{ comment.id }}" style="color: blue; cursor: pointer;">reply</a>
+
+    <div id="reply-form-{{ comment.id }}" style="display:none; margin-top: 10px;">
+      <form method="POST" action="{{ url_for('comment', post_id=post.id) }}">
+        <input type="hidden" name="parent_id" value="{{ comment.id }}">
+        <textarea name="content" placeholder="Write a reply..." rows="2" cols="50"></textarea><br>
+
+        <div id="reply-doi-list-{{ comment.id }}">
+          <div class="doi-row" style="margin-bottom:6px;">
+            <input type="text" name="dois[]" class="doi-input" placeholder="10.xxxx/xxxx or https://doi.org/..." style="width:340px;">
+            <div class="preview" style="font-size:0.9em; color:#333; margin-top:4px;"></div>
+          </div>
+        </div>
+        <button type="button" onclick="addReplyDoi({{ comment.id }})">+ Add another DOI</button>
+        <br><br>
+        <button type="submit">Submit Reply</button>
+      </form>
+    </div>
+
+    {% if comment.replies.count() > 0 %}
+      <a href="javascript:void(0);" onclick="toggleReplies({{ comment.id }})" id="toggle-replies-link-{{ comment.id }}" style="display:block; margin-top:5px; color: blue; cursor: pointer;">
+        show replies ({{ comment.replies.count() }})
+      </a>
+      <div id="replies-{{ comment.id }}" style="display:none; margin-top: 5px;">
+        {% for reply in comment.replies.order_by(Comment.created_at.asc()) %}
+          <div class="reply" style="margin-left: 10px; border-left: 2px solid #888; padding-left: 8px; margin-bottom:8px;">
+            <p>
+              <a href="{{ url_for('profile', username=reply.user.username) }}">
+                <img src="{{ reply.user.get_profile_pic() }}" alt="Profile Picture"
+                     style="height:18px; width:18px; border-radius:50%; vertical-align:middle; margin-right:5px;">
+                {{ reply.user.username }}
+              </a>
+              ({{ reply.created_at.strftime('%Y-%m-%d %H:%M') }})
+            </p>
+            <p>{{ reply.content }}</p>
+            {% if reply.dois %}
+              <div class="references-box">
+                <strong>References:</strong>
+                <ul style="margin:6px 0 0 18px;">
+                  {% for d in reply.dois %}
+                    <li>
+                      {% if d.title %}<em>{{ d.title }}</em>{% else %}{{ d.identifier }}{% endif %}
+                      {% if d.year %} ({{ d.year }}){% endif %}
+                      {% if d.authors %} — {{ d.authors }}{% endif %}
+                      {% if d.url %} — <a href="{{ d.url }}" target="_blank">{{ d.identifier }}</a>{% endif %}
+                    </li>
+                  {% endfor %}
+                </ul>
+              </div>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+{% endfor %}
+
+<br>
+<a href="{{ url_for('dashboard', tag=post.tags[0].name if post.tags else '') }}">Back to posts</a>
+
+<script>
+function toggleReplyForm(commentId) {
+  const form = document.getElementById('reply-form-' + commentId);
+  const link = document.getElementById('toggle-link-' + commentId);
+  if (form.style.display === 'none' || form.style.display === '') {
+    form.style.display = 'block';
+    link.textContent = 'collapse';
+  } else {
+    form.style.display = 'none';
+    link.textContent = 'reply';
+  }
+}
+
+function toggleReplies(commentId) {
+  const replies = document.getElementById('replies-' + commentId);
+  const link = document.getElementById('toggle-replies-link-' + commentId);
+  if (replies.style.display === 'none' || replies.style.display === '') {
+    replies.style.display = 'block';
+    link.textContent = 'hide replies (' + replies.children.length + ')';
+  } else {
+    replies.style.display = 'none';
+    link.textContent = 'show replies (' + replies.children.length + ')';
+  }
+}
+
+document.querySelectorAll('.doi-input').forEach(input => {
+  input.addEventListener('input', async e => {
+    const val = e.target.value.trim();
+    const previewDiv = e.target.parentElement.querySelector('.preview');
+    if (!val) { previewDiv.textContent = ''; return; }
+    previewDiv.textContent = 'Fetching...';
+    try {
+      const resp = await fetch(`/doi/preview?doi=${encodeURIComponent(val)}`);
+      const data = await resp.json();
+      if (!data.ok) { previewDiv.textContent = data.error || 'Not found.'; }
+      else {
+        const d = data.data;
+        const authors = (d.authors || []).join(', ');
+        const yr = d.year ? ` (${d.year})` : '';
+        previewDiv.innerHTML = `<div><strong>${d.title || 'Untitled'}</strong>${yr}</div>
+                                <div>${authors}</div>
+                                <div><a href="${d.url}" target="_blank">${d.identifier}</a></div>`;
+      }
+    } catch (err) { previewDiv.textContent = 'Error fetching preview.'; }
+  });
+});
+
+document.getElementById('add-comment-doi').addEventListener('click', () => {
+  const list = document.getElementById('comment-doi-list');
+  const row = document.createElement('div');
+  row.className = 'doi-row';
+  row.style.marginBottom = '6px';
+  row.innerHTML = `<input type="text" name="dois[]" class="doi-input" placeholder="10.xxxx/xxxx or https://doi.org/..." style="width:340px;" required>
+                   <div class="preview" style="font-size:0.9em; color:#333; margin-top:4px;"></div>`;
+  list.appendChild(row);
+  row.querySelector('.doi-input').addEventListener('input', async e => {
+    const val = e.target.value.trim();
+    const previewDiv = e.target.parentElement.querySelector('.preview');
+    if (!val) { previewDiv.textContent = ''; return; }
+    previewDiv.textContent = 'Fetching...';
+    try {
+      const resp = await fetch(`/doi/preview?doi=${encodeURIComponent(val)}`);
+      const data = await resp.json();
+      if (!data.ok) { previewDiv.textContent = data.error || 'Not found.'; }
+      else {
+        const d = data.data;
+        const authors = (d.authors || []).join(', ');
+        const yr = d.year ? ` (${d.year})` : '';
+        previewDiv.innerHTML = `<div><strong>${d.title || 'Untitled'}</strong>${yr}</div>
+                                <div>${authors}</div>
+                                <div><a href="${d.url}" target="_blank">${d.identifier}</a></div>`;
+      }
+    } catch (err) { previewDiv.textContent = 'Error fetching preview.'; }
+  });
+});
+
+function addReplyDoi(commentId) {
+  const list = document.getElementById('reply-doi-list-' + commentId);
+  const row = document.createElement('div');
+  row.className = 'doi-row';
+  row.style.marginBottom = '6px';
+  row.innerHTML = `<input type="text" name="dois[]" class="doi-input" placeholder="10.xxxx/xxxx or https://doi.org/..." style="width:340px;">
+                   <div class="preview" style="font-size:0.9em; color:#333; margin-top:4px;"></div>`;
+  list.appendChild(row);
+  row.querySelector('.doi-input').addEventListener('input', async e => {
+    const val = e.target.value.trim();
+    const previewDiv = e.target.parentElement.querySelector('.preview');
+    if (!val) { previewDiv.textContent = ''; return; }
+    previewDiv.textContent = 'Fetching...';
+    try {
+      const resp = await fetch(`/doi/preview?doi=${encodeURIComponent(val)}`);
+      const data = await resp.json();
+      if (!data.ok) { previewDiv.textContent = data.error || 'Not found.'; }
+      else {
+        const d = data.data;
+        const authors = (d.authors || []).join(', ');
+        const yr = d.year ? ` (${d.year})` : '';
+        previewDiv.innerHTML = `<div><strong>${d.title || 'Untitled'}</strong>${yr}</div>
+                                <div>${authors}</div>
+                                <div><a href="${d.url}" target="_blank">${d.identifier}</a></div>`;
+      }
+    } catch (err) { previewDiv.textContent = 'Error fetching preview.'; }
+  });
+}
+</script>
+<script>
+  // Highlight a comment if URL contains highlight_comment
+  window.addEventListener('DOMContentLoaded', () => {
+    const params = new URLSearchParams(window.location.search);
+    const highlightId = params.get('highlight_comment');
+    if (highlightId) {
+      const comment = document.getElementById('comment-' + highlightId);
+      if (comment) {
+        comment.style.border = '2px solid #ff9800';  // Highlight border
+        comment.style.backgroundColor = '#fff3e0';   // Highlight background
+        comment.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
     }
-
-    function toggleReplies(commentId) {
-      const replies = document.getElementById('replies-' + commentId);
-      const link = document.getElementById('toggle-replies-link-' + commentId);
-      if (replies.style.display === 'none' || replies.style.display === '') {
-        replies.style.display = 'block';
-        link.textContent = 'hide replies (' + replies.children.length + ')';
-      } else {
-        replies.style.display = 'none';
-        link.textContent = 'show replies (' + replies.children.length + ')';
-      }
-    }
-  </script>
+  });
+</script>
 
 {% endblock %}

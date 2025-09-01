@@ -20,3 +20,5 @@ gunicorn
 dotenv
 psycopg2
 Flask-migrate
+requests
+datetime

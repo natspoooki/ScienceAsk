@@ -1,14 +1,47 @@
 {% extends "base.html" %}
-
 {% block content %}
-  <h2>{{ user.username }}'s Profile</h2>
-  <img src="{{ user.get_profile_pic() }}" alt="Profile Picture"
-       style="height:100px; width:100px; border-radius:50%; margin-bottom:15px;">
-  
-  <h3>Posts by {{ user.username }}:</h3>
-  {% if user.posts %}
-    {% for post in user.posts|sort(attribute='created_at', reverse=True) %}
-      <div class="post" style="margin-bottom:15px;">
+
+<h2>
+  {{ user.username }}
+  {% if user.confirmed %}
+    <span class="badge confirmed">✔ Confirmed</span>
+  {% endif %}
+</h2>
+
+<img src="{{ user.get_profile_pic() }}" alt="Profile Picture" class="profile-pic">
+
+{% if current_user.id == user.id %}
+<h3>Edit Profile</h3>
+<form method="POST" action="{{ url_for('profile', username=user.username) }}" enctype="multipart/form-data" class="profile-edit-form">
+    <label for="username">Username:</label>
+    <input type="text" name="username" value="{{ user.username }}" placeholder="Enter your username" required>
+
+    <label for="email">Email:</label>
+    <input type="email" name="email" value="{{ user.email }}" placeholder="Enter your email" required>
+
+    <label for="bio">Bio / Description:</label>
+    <textarea name="bio" placeholder="Write a short description about yourself..." rows="3">{{ user.bio or '' }}</textarea>
+
+    <label for="profile_pic">Profile Picture:</label>
+    <input type="file" name="profile_pic" accept="image/*">
+
+    <button type="submit">Update Profile</button>
+</form>
+{% endif %}
+
+<br>
+
+<!-- Tabs -->
+<div class="tab">
+  <button class="tablinks" onclick="openTab(event, 'Posts')" id="defaultOpen">Posts</button>
+  <button class="tablinks" onclick="openTab(event, 'Comments')">Comments</button>
+  <button class="tablinks" onclick="openTab(event, 'References')">References</button>
+</div>
+
+<div id="Posts" class="tabcontent">
+  {% if posts %}
+    {% for post in posts %}
+      <div class="post">
         <h4><a href="{{ url_for('post_detail', post_id=post.id) }}">{{ post.title }}</a></h4>
         <p>{{ post.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
       </div>
@@ -16,4 +49,53 @@
   {% else %}
     <p>No posts yet.</p>
   {% endif %}
+</div>
+
+<div id="Comments" class="tabcontent">
+  {% if comments %}
+    {% for comment in comments %}
+      <div class="comment" id="comment-{{ comment.id }}" style="margin-bottom:12px;">
+        <a href="{{ url_for('post_detail', post_id=comment.post.id) }}?highlight_comment={{ comment.id }}" style="text-decoration:none; color:inherit;">
+          <p>{{ comment.content }}</p>
+          <small>{{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+        </a>
+      </div>
+    {% endfor %}
+  {% else %}
+    <p>No comments yet.</p>
+  {% endif %}
+</div>
+
+
+<div id="References" class="tabcontent">
+  {% if dois %}
+    <ul>
+      {% for d in dois %}
+        <li>
+          {% if d.title %}<em>{{ d.title }}</em>{% else %}{{ d.identifier }}{% endif %}
+          {% if d.year %} ({{ d.year }}){% endif %}
+          {% if d.authors %} — {{ d.authors }}{% endif %}
+          {% if d.url %} — <a href="{{ d.url }}" target="_blank">{{ d.identifier }}</a>{% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>No references yet.</p>
+  {% endif %}
+</div>
+
+<script>
+function openTab(evt, tabName) {
+  var i, tabcontent, tablinks;
+  tabcontent = document.getElementsByClassName("tabcontent");
+  for (i = 0; i < tabcontent.length; i++) { tabcontent[i].style.display = "none"; }
+  tablinks = document.getElementsByClassName("tablinks");
+  for (i = 0; i < tablinks.length; i++) { tablinks[i].className = tablinks[i].className.replace(" active", ""); }
+  document.getElementById(tabName).style.display = "block";
+  evt.currentTarget.className += " active";
+}
+// Open default tab
+document.getElementById("defaultOpen").click();
+</script>
+
 {% endblock %}

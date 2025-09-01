@@ -1,10 +1,79 @@
 {% extends "base.html" %}
-
 {% block content %}
 <h2>Edit Post</h2>
+
 <form method="POST" action="{{ url_for('edit_post', post_id=post.id) }}">
-    <input type="text" name="title" value="{{ post.title }}" required>
-    <textarea name="content" rows="5" required>{{ post.content }}</textarea>
-    <button type="submit">Save Changes</button>
+    <input type="text" name="title" placeholder="Post title" value="{{ post.title }}" required><br><br>
+    <textarea name="content" placeholder="Write something..." required>{{ post.content }}</textarea><br><br>
+
+    <label for="additional_tags">Add up to 4 additional disciplines:</label><br>
+<select id="additional_tags" name="additional_tags" multiple size="6" style="width: 200px;">
+  {% for discipline in disciplines %}
+    {% if discipline != main_tag %}
+      <option value="{{ discipline }}" {% if discipline in additional_tags %}selected{% endif %}>
+        {{ discipline|capitalize }}
+      </option>
+    {% endif %}
+  {% endfor %}
+</select><br>
+<small>Press Ctrl (Cmd on Mac) + Click to select multiple disciplines. You can select up to 4 additional disciplines.</small><br><br>
+
+
+    <!-- DOIs -->
+    <div id="post-doi-list">
+      {% for d in post.dois %}
+        <div class="doi-row" style="margin-bottom:6px;">
+          <input type="text" name="dois[]" class="doi-input" value="{{ d.identifier }}" style="width:340px;">
+          <div class="preview" style="font-size:0.9em; color:#333; margin-top:4px;"></div>
+        </div>
+      {% else %}
+        <div class="doi-row" style="margin-bottom:6px;">
+          <input type="text" name="dois[]" class="doi-input" placeholder="10.xxxx/xxxx or https://doi.org/..." style="width:340px;">
+          <div class="preview" style="font-size:0.9em; color:#333; margin-top:4px;"></div>
+        </div>
+      {% endfor %}
+    </div>
+    <button type="button" id="add-doi">+ Add another DOI</button><br><br>
+
+    <button type="submit">Update Post</button>
 </form>
+
+<script>
+  // Add DOI row dynamically
+  document.getElementById('add-doi').addEventListener('click', () => {
+    const list = document.getElementById('post-doi-list');
+    const row = document.createElement('div');
+    row.className = 'doi-row';
+    row.style.marginBottom = '6px';
+    row.innerHTML = `<input type="text" name="dois[]" class="doi-input" placeholder="10.xxxx/xxxx or https://doi.org/..." style="width:340px;">
+                     <div class="preview" style="font-size:0.9em; color:#333; margin-top:4px;"></div>`;
+    list.appendChild(row);
+    attachDoiPreview(row.querySelector('.doi-input'));
+  });
+
+  // Attach automatic DOI preview
+  function attachDoiPreview(input) {
+    input.addEventListener('input', async e => {
+      const val = e.target.value.trim();
+      const previewDiv = e.target.parentElement.querySelector('.preview');
+      if (!val) { previewDiv.textContent = ''; return; }
+      previewDiv.textContent = 'Fetching...';
+      try {
+        const resp = await fetch(`/doi/preview?doi=${encodeURIComponent(val)}`);
+        const data = await resp.json();
+        if (!data.ok) { previewDiv.textContent = data.error || 'Not found.'; }
+        else {
+          const d = data.data;
+          const authors = (d.authors || []).join(', ');
+          const yr = d.year ? ` (${d.year})` : '';
+          previewDiv.innerHTML = `<div><strong>${d.title || 'Untitled'}</strong>${yr}</div>
+                                  <div>${authors}</div>
+                                  <div><a href="${d.url}" target="_blank">${d.identifier}</a></div>`;
+        }
+      } catch (err) { previewDiv.textContent = 'Error fetching preview.'; }
+    });
+  }
+
+  document.querySelectorAll('.doi-input').forEach(attachDoiPreview);
+</script>
 {% endblock %}
