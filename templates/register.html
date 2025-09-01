@@ -2,10 +2,15 @@
 
 {% block content %}
 <h2>Register</h2>
-<form method="POST" action="{{ url_for('register') }}" enctype="multipart/form-data">
+<form method="POST" action="{{ url_for('register') }}" enctype="multipart/form-data" id="registerForm">
     <input type="text" name="username" placeholder="Username" required>
     <input type="email" name="email" placeholder="Email" required>
-    <input type="password" name="password" placeholder="Password" required>
+
+    <input type="password" name="password" placeholder="Password" id="password" required>
+    <input type="password" name="confirm_password" placeholder="Confirm Password" id="confirm_password" required>
+
+    <div id="password-strength-text"></div>
+    <div id="password-match-text"></div>
 
     <label for="profile_pic">Profile Picture (optional):</label>
     <input type="file" name="profile_pic" accept="image/*">
@@ -14,4 +19,60 @@
 </form>
 
 <a href="{{ url_for('login') }}">Already have an account? Log in</a>
+
+<script>
+const password = document.getElementById('password');
+const confirmPassword = document.getElementById('confirm_password');
+const matchText = document.getElementById('password-match-text');
+const strengthText = document.getElementById('password-strength-text');
+
+function checkMatch() {
+    if (confirmPassword.value === "") {
+        matchText.textContent = "";
+        return;
+    }
+    if (password.value === confirmPassword.value) {
+        matchText.textContent = "Passwords match ✅";
+        matchText.style.color = "green";
+    } else {
+        matchText.textContent = "Passwords do not match ❌";
+        matchText.style.color = "red";
+    }
+}
+
+function checkStrength() {
+    const val = password.value;
+    let strength = 0;
+
+    if (val.length >= 8) strength++;
+    if (/[A-Z]/.test(val)) strength++;
+    if (/[a-z]/.test(val)) strength++;
+    if (/[0-9]/.test(val)) strength++;
+    if (/[^A-Za-z0-9]/.test(val)) strength++;
+
+    switch(strength) {
+        case 0:
+        case 1:
+        case 2:
+            strengthText.textContent = "Weak ❌";
+            strengthText.style.color = "red";
+            break;
+        case 3:
+        case 4:
+            strengthText.textContent = "Medium ⚠️";
+            strengthText.style.color = "orange";
+            break;
+        case 5:
+            strengthText.textContent = "Strong ✅";
+            strengthText.style.color = "green";
+            break;
+    }
+}
+
+password.addEventListener('input', () => {
+    checkStrength();
+    checkMatch();
+});
+confirmPassword.addEventListener('input', checkMatch);
+</script>
 {% endblock %}
