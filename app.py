@@ -432,27 +432,26 @@ def confirm_email(token):
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    resend_email_user = None  # default, no resend link
+
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
-
         user = User.query.filter_by(username=username).first()
 
-        # Check credentials
         if user and user.check_password(password):
-            # Not verified yet → show message + link
             if not user.confirmed:
-                flash('Your email is not verified.', 'warning')
-                return render_template('login.html', unverified_user=user)
-
-            # Verified → log in
-            login_user(user)
-            return redirect(url_for('home'))
+                # User exists, password correct, but not verified
+                resend_email_user = user  # pass to template
+                flash('Your account is not verified yet.', 'warning')
+            else:
+                login_user(user)
+                return redirect(url_for('home'))
         else:
             flash('Invalid username or password', 'danger')
-            return redirect(url_for('login'))
 
-    return render_template('login.html')
+    return render_template('login.html', resend_email_user=resend_email_user)
+
 
 
 @app.route('/logout')
