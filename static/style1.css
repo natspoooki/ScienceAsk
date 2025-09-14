@@ -1,14 +1,15 @@
-/* Light mode (default) */
+/* -----------------------------
+   Body & Links
+------------------------------ */
 body {
   background-color: white;
-  color: black;
-  font-family: Arial, sans-serif;
+  color: #1c1c1c;
+  font-family: "Segoe UI", Arial, sans-serif;
   margin: 0;
   padding: 0 20px;
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* Links */
 a {
   color: #007bff;
   text-decoration: none;
@@ -18,231 +19,130 @@ a:hover {
   text-decoration: underline;
 }
 
-/* Posts and comments container */
+/* -----------------------------
+   Posts and Comments
+------------------------------ */
 .post, .comment {
-  background-color: #f9f9f9;
+  background-color: #fefefe;
   border: 1px solid #ddd;
-  padding: 15px 20px;
+  padding: 20px;
   margin-bottom: 20px;
-  border-radius: 8px;
-  transition: background-color 0.3s ease, border-color 0.3s ease;
+  border-radius: 10px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+.post:hover, .comment:hover {
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
 
-/* Comments container nested inside posts */
 .comments {
-  margin-left: 20px;
+  margin-left: 25px;
   border-left: 3px solid #ccc;
   padding-left: 15px;
   margin-bottom: 15px;
 }
 
-/* Buttons */
-button {
-  background-color: #007bff;
-  border: none;
-  padding: 10px 16px;
-  color: white;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 1rem;
-  transition: background-color 0.3s ease;
-}
-button:hover {
-  background-color: #0056b3;
-}
-
-/* Forms */
-textarea, input[type="text"], input[type="password"], input[type="email"], select {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  box-sizing: border-box;
-  margin-bottom: 15px;
-  font-size: 1rem;
-  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
-}
-
-/* Form labels and toggles */
-label {
-  font-weight: 600;
-  display: block;
-  margin-bottom: 6px;
-}
-
-/* Toggle links/buttons for show/hide */
-.toggle-link {
-  cursor: pointer;
-  color: #007bff;
-  font-weight: 600;
-  text-decoration: underline;
-  margin-top: 10px;
-  display: inline-block;
-  transition: color 0.3s ease;
-}
-.toggle-link:hover {
-  color: #0056b3;
-}
-
-/* Horizontal rule */
-hr {
-  border: none;
-  border-top: 1px solid #ddd;
-  margin: 25px 0;
-  transition: border-color 0.3s ease;
-}
-
-/* Hidden containers */
-.hidden {
-  display: none !important;
-}
-
-/* Dark mode overrides */
-body.dark-mode {
-  background-color: #0d1532;
-  color: #e0e0e0;
-}
-
-body.dark-mode a {
-  color: #66aaff;
-}
-body.dark-mode a:hover {
-  color: #aaccff;
-  text-decoration: underline;
-}
-
-body.dark-mode .post, 
-body.dark-mode .comment {
-  background-color: #1e1e1e;
-  border: 1px solid #333;
-}
-
-body.dark-mode .comments {
-  border-left-color: #555;
-}
-
-body.dark-mode textarea,
-body.dark-mode input[type="text"],
-body.dark-mode input[type="password"],
-body.dark-mode input[type="email"],
-body.dark-mode select {
-  background-color: #2a2a2a;
-  border: 1px solid #555;
-  color: #ddd;
-}
-
-body.dark-mode button {
-  background-color: #3399ff;
-  color: white;
-}
-body.dark-mode button:hover {
-  background-color: #66b3ff;
-}
-
-body.dark-mode hr {
-  border-top-color: #444;
-}
-
-/* Dark mode toggle button styling */
-#darkModeToggle {
-  position: fixed;
-  top: 15px;
-  right: 15px;
-  background-color: #222;
-  border: none;
-  padding: 10px 14px;
-  color: #eee;
-  cursor: pointer;
-  border-radius: 5px;
-  z-index: 9999;
-  font-weight: bold;
-  box-shadow: 0 0 8px rgba(0,0,0,0.5);
-  transition: background-color 0.3s ease, color 0.3s ease;
-}
-body.dark-mode #darkModeToggle {
-  background-color: #66aaff;
-  color: #121212;
-}
-
-/* Additional spacing for post form container */
-#post-form-container {
-  margin-top: 15px;
-  margin-bottom: 30px;
-}
-
-/* Textarea resize control */
-textarea {
-  resize: vertical;
-  min-height: 100px;
-  font-family: inherit;
-}
-
-/* Styling for select dropdown if added */
-select {
-  appearance: none;
-  background-color: white;
-  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg fill='gray' height='16' viewBox='0 0 24 24' width='16' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 12px center;
-  background-size: 16px 16px;
-  padding-right: 30px;
-}
-body.dark-mode select {
-  background-color: #2a2a2a;
-  color: #ddd;
-  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg fill='%23ddd' height='16' viewBox='0 0 24 24' width='16' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
-}
-
 /* Reply styling */
 .reply {
   margin-left: 20px;
-  padding-left: 10px;
-  border-left: 2px solid black;
-  padding: 5px;
-  margin-bottom: 5px;
-  background-color: #f9f9f9; /* Light mode */
+  padding: 10px;
+  border-left: 2px solid #888;
+  border-radius: 6px;
+  margin-bottom: 10px;
+  background-color: #f4f4f4;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+/* -----------------------------
+   Buttons
+------------------------------ */
+button {
+  background-color: #007bff;
+  border: none;
+  padding: 10px 18px;
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: background-color 0.3s ease, transform 0.1s ease;
+}
+button:hover {
+  background-color: #0056b3;
+  transform: translateY(-1px);
+}
+button.delete-btn {
+  background-color: #e74c3c;
+}
+button.delete-btn:hover {
+  background-color: #c0392b;
+}
+
+/* Toggle comment/reply buttons */
+button.toggle-comments-btn {
+  margin-bottom: 15px;
+  font-size: 0.9rem;
+  padding: 6px 12px;
   border-radius: 6px;
 }
 
-/* Dark mode for replies */
-body.dark-mode .reply {
-  background-color: #1e1e1e;
-  border-left-color: #555;
-}
-
-/* Make sure toggle comment buttons have some spacing */
-button.toggle-comments-btn {
+/* -----------------------------
+   Forms & Inputs
+------------------------------ */
+textarea, input[type="text"], input[type="password"], input[type="email"], select {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
   margin-bottom: 15px;
+  font-size: 1rem;
+  transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+textarea:focus, input:focus, select:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 5px rgba(0,123,255,0.3);
+  outline: none;
 }
 
-/* Style for the post title links */
+/* -----------------------------
+   Post Title
+------------------------------ */
 .post h3 a {
-  color: inherit;
+  color: #1c1c1c;
   text-decoration: none;
-  transition: color 0.3s ease;
+  font-weight: 600;
 }
-body.dark-mode .post h3 a:hover {
-  color: #66aaff;
+.post h3 a:hover {
+  color: #007bff;
 }
 
-/* ---------------------------------------------- */
-/* Profile Tab Styling */
-/* ---------------------------------------------- */
+/* -----------------------------
+   Tags
+------------------------------ */
+.tag-badge {
+  display: inline-block;
+  background-color: #007bff;
+  color: white;
+  font-size: 0.85rem;
+  padding: 3px 10px;
+  border-radius: 12px;
+  margin-right: 5px;
+  margin-bottom: 5px;
+}
+
+/* -----------------------------
+   Profile / Tabs
+------------------------------ */
 .profile-pic {
-  height: 100px; 
-  width: 100px; 
-  border-radius: 50%; 
-  margin-bottom:15px;
-}
-
-.tab {
-  overflow: hidden;
-  border-bottom: 1px solid #ccc;
+  height: 100px;
+  width: 100px;
+  border-radius: 50%;
   margin-bottom: 15px;
+  border: 2px solid #ddd;
 }
 
 .tab button {
-  background-color: #eee;
+  background-color: #f2f2f2;
   color: #333;
   border: 1px solid #ccc;
   outline: none;
@@ -250,167 +150,21 @@ body.dark-mode .post h3 a:hover {
   cursor: pointer;
   font-weight: bold;
   border-radius: 6px 6px 0 0;
-  transition: background-color 0.3s, color 0.3s;
   margin-right: 4px;
+  transition: background-color 0.3s ease;
 }
-
 .tab button:hover {
-  background-color: #ddd;
+  background-color: #e0e0e0;
 }
-
 .tab button.active {
   background-color: white;
   color: #007bff;
   border-bottom: 3px solid #007bff;
 }
 
-.tabcontent {
-  display: none;
-  padding: 15px 0;
-}
-
-.tabcontent.active {
-  display: block;
-}
-
-/* Profile edit form */
-.profile-edit-form input[type="text"],
-.profile-edit-form textarea,
-.profile-edit-form input[type="file"] {
-  width: 100%;
-  padding: 10px 12px;
-  margin-bottom: 15px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  box-sizing: border-box;
-  font-size: 1rem;
-}
-
-.profile-edit-form button {
-  background-color: #007bff;
-  color: white;
-  padding: 10px 16px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-}
-.profile-edit-form button:hover {
-  background-color: #0056b3;
-}
-
-.profile-edit-form label {
-  font-weight: 600;
-  margin-bottom: 5px;
-  display: block;
-}
-
-/* Dark mode for profile tabs */
-body.dark-mode .tab button {
-  background-color: #2a2a2a;
-  color: #ddd;
-  border-color: #555;
-}
-body.dark-mode .tab button:hover {
-  background-color: #444;
-}
-body.dark-mode .tab button.active {
-  background-color: #1e1e1e;
-  color: #66aaff;
-  border-bottom: 3px solid #66aaff;
-}
-body.dark-mode .tabcontent {
-  color: #ddd;
-}
-body.dark-mode .profile-edit-form input[type="text"],
-body.dark-mode .profile-edit-form textarea,
-body.dark-mode .profile-edit-form input[type="file"] {
-  background-color: #2a2a2a;
-  color: #ddd;
-  border: 1px solid #555;
-}
-
 /* -----------------------------
-   Tags styling
+   Flash messages (keep your colors)
 ------------------------------ */
-.tag-badge {
-  display: inline-block;
-  background-color: #007bff;
-  color: white;
-  font-size: 0.85rem;
-  padding: 2px 8px;
-  border-radius: 12px;
-  margin-right: 5px;
-  margin-bottom: 5px;
-  transition: background-color 0.3s ease, color 0.3s ease;
-}
-
-body.dark-mode .tag-badge {
-  background-color: #3399ff;
-  color: #121212;
-}
-
-/* -----------------------------
-   References / DOIs styling
------------------------------- */
-.references-box {
-  background-color: #f6f6f6;
-  padding: 10px 12px;
-  border-radius: 6px;
-  margin-top: 12px;
-  border: 1px solid #ddd;
-}
-
-.references-box ul {
-  margin: 6px 0 0 18px;
-  padding: 0;
-}
-
-.references-box li {
-  margin-bottom: 6px;
-}
-
-body.dark-mode .references-box {
-  background-color: #1e1e1e;
-  border: 1px solid #555;
-  color: #ddd;
-}
-
-body.dark-mode .references-box a {
-  color: #66aaff;
-}
-
-body.dark-mode .references-box a:hover {
-  color: #aaccff;
-}
-
-#user-info a {
-  text-decoration: none;
-  transition: color 0.3s ease;
-}
-#user-info a:hover {
-  color: #0056b3;
-}
-
-body.dark-mode #user-info a {
-  color: #66aaff;
-}
-body.dark-mode #user-info a:hover {
-  color: #aaccff;
-}
-.badge {
-  display: inline-block;
-  padding: 2px 8px;
-  font-size: 0.8em;
-  font-weight: bold;
-  border-radius: 8px;
-  margin-left: 8px;
-  vertical-align: middle;
-}
-
-.badge.confirmed {
-  background-color: #4CAF50;
-  color: white;
-}
 .flashes {
     list-style-type: none;
     padding: 0;
@@ -420,7 +174,58 @@ body.dark-mode #user-info a:hover {
     padding: 10px 15px;
     margin-bottom: 8px;
     border-radius: 4px;
+    font-weight: 600;
 }
 .flashes li.success { background-color: #d4edda; color: #155724; }
 .flashes li.info { background-color: #cce5ff; color: #004085; }
 .flashes li.danger { background-color: #f8d7da; color: #721c24; }
+
+
+/* -----------------------------
+   Dark Mode
+------------------------------ */
+body.dark-mode {
+  background-color: #0d1532;
+  color: #e0e0e0;
+}
+body.dark-mode a { color: #66aaff; }
+body.dark-mode a:hover { color: #aaccff; }
+
+body.dark-mode .post, body.dark-mode .comment {
+  background-color: #1e1e1e;
+  border: 1px solid #333;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+}
+body.dark-mode .reply {
+  background-color: #2a2a2a;
+  border-left-color: #555;
+}
+body.dark-mode textarea,
+body.dark-mode input,
+body.dark-mode select {
+  background-color: #2a2a2a;
+  color: #ddd;
+  border: 1px solid #555;
+}
+body.dark-mode button { background-color: #3399ff; }
+body.dark-mode button:hover { background-color: #66b3ff; }
+
+/* Dark mode toggle */
+#darkModeToggle {
+  position: fixed;
+  top: 15px;
+  right: 15px;
+  background-color: #222;
+  border: none;
+  padding: 10px 14px;
+  color: #eee;
+  cursor: pointer;
+  border-radius: 6px;
+  z-index: 9999;
+  font-weight: bold;
+  box-shadow: 0 0 8px rgba(0,0,0,0.5);
+}
+body.dark-mode #darkModeToggle {
+  background-color: #66aaff;
+  color: #121212;
+}

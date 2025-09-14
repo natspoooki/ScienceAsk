@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, abort
 from flask_migrate import Migrate
 from models import db, User, Post, Comment, Tag, DOI
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
@@ -336,6 +336,10 @@ def profile(username):
 # ----------------------------
 @app.route('/comment/<int:post_id>', methods=['POST'])
 def comment(post_id):
+    post = Post.query.get_or_404(post_id)
+    if post.solved:
+        flash("Cannot comment or reply on a solved post.", "danger")
+        return redirect(url_for('post_detail', post_id=post.id))
     content = request.form['content']
     parent_id = request.form.get('parent_id')
 
@@ -483,6 +487,11 @@ def logout():
 @login_required
 def edit_post(post_id):
     post = Post.query.get_or_404(post_id)
+    if post.solved:
+        flash("This post is locked because it is solved.", "danger")
+        return redirect(url_for('post_detail', post_id=post.id))
+    if current_user.id != post.user_id:
+        abort(403)
     if post.user_id != current_user.id:
         main_tag_name = post.tags[0].name if post.tags else ''
         flash("You can only edit your own posts.")
@@ -532,6 +541,12 @@ def edit_post(post_id):
 @login_required
 def edit_comment(comment_id):
     comment = Comment.query.get_or_404(comment_id)
+    post = comment.post  # Assuming you have a backref from Comment to Post
+    if post.solved:
+        flash("Cannot edit a comment/reply because the post is solved.", "danger")
+        return redirect(url_for('post_detail', post_id=post.id))
+    if current_user.id != comment.user_id:
+        abort(403)
     if comment.user_id != current_user.id:
         flash("You can only edit your own comments.")
         return redirect(url_for('post_detail', post_id=comment.post_id))
