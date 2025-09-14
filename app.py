@@ -631,5 +631,49 @@ def doi_preview():
         }
     })
 
+# ----------------------------
+# Delete Post
+# ----------------------------
+@app.route('/delete_post/<int:post_id>', methods=['POST'])
+@login_required
+def delete_post(post_id):
+    post = Post.query.get_or_404(post_id)
+    if post.user_id != current_user.id:
+        flash("You can only delete your own posts.", "danger")
+        return redirect(url_for('post_detail', post_id=post.id))
+
+    # delete associated DOIs
+    for doi in post.dois:
+        db.session.delete(doi)
+    # delete comments (and their DOIs)
+    for comment in post.comments:
+        for doi in comment.dois:
+            db.session.delete(doi)
+        db.session.delete(comment)
+    db.session.delete(post)
+    db.session.commit()
+    flash("Post deleted successfully.", "success")
+    return redirect(url_for('dashboard', tag=post.tags[0].name if post.tags else ''))
+
+# ----------------------------
+# Delete Comment
+# ----------------------------
+@app.route('/delete_comment/<int:comment_id>', methods=['POST'])
+@login_required
+def delete_comment(comment_id):
+    comment = Comment.query.get_or_404(comment_id)
+    if comment.user_id != current_user.id:
+        flash("You can only delete your own comments.", "danger")
+        return redirect(url_for('post_detail', post_id=comment.post_id))
+
+    # delete associated DOIs
+    for doi in comment.dois:
+        db.session.delete(doi)
+    db.session.delete(comment)
+    db.session.commit()
+    flash("Comment deleted successfully.", "success")
+    return redirect(url_for('post_detail', post_id=comment.post_id))
+
+
 if __name__ == '__main__':
     app.run(debug=True)

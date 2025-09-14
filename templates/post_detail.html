@@ -58,8 +58,13 @@
 {% if current_user.id == post.user_id %}
   <div style="margin-top:6px;">
     <a href="{{ url_for('edit_post', post_id=post.id) }}" style="font-size:0.9em; margin-left:10px;">Edit</a>
+
+    <form method="POST" action="{{ url_for('delete_post', post_id=post.id) }}" style="display:inline;">
+        <button type="submit" class="delete-post-btn" style="font-size:0.9em; margin-left:10px; color:red; background-color: black;">Delete Post ❌</button>
+    </form>
   </div>
 {% endif %}
+
 
 <hr>
 
@@ -90,8 +95,14 @@
       </a>
       ({{ comment.created_at.strftime('%Y-%m-%d %H:%M') }})
       {% if current_user.id == comment.user_id %}
-        <a href="{{ url_for('edit_comment', comment_id=comment.id) }}" style="font-size:0.8em; margin-left:5px;">Edit</a>
-      {% endif %}
+  <a href="{{ url_for('edit_comment', comment_id=comment.id) }}" style="font-size:0.8em; margin-left:5px;">Edit</a>
+
+  <!-- DELETE COMMENT -->
+  <form method="POST" action="{{ url_for('delete_comment', comment_id=comment.id) }}" style="display:inline;">
+      <button type="submit" class="delete-comment-btn" style="font-size:0.8em; margin-left:5px; color:red; background-color: black;">Delete ❌</button>
+  </form>
+{% endif %}
+
       {% if comment.edited %}
         <span style="color: gray; font-size:0.8em;">(edited)</span>
       {% endif %}
@@ -150,6 +161,13 @@
               ({{ reply.created_at.strftime('%Y-%m-%d %H:%M') }})
             </p>
             <p>{{ reply.content }}</p>
+            {% if current_user.id == reply.user_id %}
+  <a href="{{ url_for('edit_comment', comment_id=reply.id) }}" style="font-size:0.8em; margin-left:5px;">Edit</a>
+  <form method="POST" action="{{ url_for('delete_comment', comment_id=reply.id) }}" style="display:inline;">
+      <button type="submit" class="delete-comment-btn" style="font-size:0.8em; margin-left:5px; color:red; background-color: black;">Delete ❌</button>
+  </form>
+{% endif %}
+
             {% if reply.dois %}
               <div class="references-box">
                 <strong>References:</strong>
