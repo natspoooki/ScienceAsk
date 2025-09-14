@@ -331,5 +331,38 @@ function addReplyDoi(commentId) {
     }
   });
 </script>
-
+<script>
+function votePost(postId, voteValue) {
+    fetch(`/vote/post/${postId}/${voteValue}`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({})  // empty body since backend doesn’t need data
+    }).then(response => {
+        if (response.ok) {
+            location.reload(); // refresh page so updated reputation/votes show
+        } else {
+            alert("Failed to vote!");
+        }
+    });
+}
+</script>
+<script>
+function voteComment(commentId, voteValue) {
+    fetch(`/vote/comment/${commentId}/${voteValue}`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({})
+    }).then(response => {
+        if (response.ok) {
+            location.reload();
+        } else {
+            alert("Failed to vote!");
+        }
+    });
+}
+</script>
 {% endblock %}
