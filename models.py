@@ -21,6 +21,7 @@ class User(UserMixin, db.Model):
     profile_pic = db.Column(db.String(150), nullable=True)
     confirmed = db.Column(db.Boolean, default=False)  # <-- email confirmation
     confirmed_on = db.Column(db.DateTime)
+    reputation = db.Column(db.Float, default=0.0)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)

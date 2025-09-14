@@ -228,6 +228,7 @@ def send_confirmation_email(user):
 # ----------------------------
 def vote_post(user, post, vote_value):
     """vote_value = 1 (upvote) or -1 (downvote)"""
+    vote_value = int(vote_value)  
     existing_vote = PostVote.query.filter_by(user_id=user.id, post_id=post.id).first()
     if existing_vote:
         # Remove reputation from old vote
@@ -248,6 +249,7 @@ def vote_post(user, post, vote_value):
 
 
 def vote_comment(user, comment, vote_value):
+    vote_value = int(vote_value)  
     existing_vote = CommentVote.query.filter_by(user_id=user.id, comment_id=comment.id).first()
     if existing_vote:
         comment_owner = User.query.get(comment.user_id)
