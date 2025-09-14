@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, abort
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, abort, current_app
 from flask_migrate import Migrate
 from models import db, User, Post, Comment, Tag, DOI
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
@@ -688,6 +688,60 @@ def delete_comment(comment_id):
     db.session.commit()
     flash("Comment deleted successfully.", "success")
     return redirect(url_for('post_detail', post_id=comment.post_id))
+
+# --- Forgot Password ---
+@app.route('/forgot-password', methods=['GET', 'POST'])
+def forgot_password():
+    if request.method == 'POST':
+        email = request.form['email']
+        user = User.query.filter_by(email=email).first()
+        if user:
+            token = generate_confirmation_token(user.email)
+            reset_url = url_for('reset_password', token=token, _external=True)
+
+            # inside your route:
+            html_body = render_template(
+                'email/reset.html',
+                username=user.username,
+                reset_url=reset_url,
+                current_year=datetime.now().year
+            )
+            send_email(user.email, "Password Reset Request", html_body)
+
+            flash('A password reset link has been sent to your email.', 'info')
+        else:
+            flash('Email not found.', 'danger')
+        return redirect(url_for('forgot_password'))
+
+    return render_template('forgot_password.html')
+
+# --- Reset Password ---
+@app.route('/reset-password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    email = confirm_token(token)
+    if not email:
+        flash('The password reset link is invalid or has expired.', 'danger')
+        return redirect(url_for('forgot_password'))
+
+    if request.method == 'POST':
+        password = request.form['password']
+        confirm_password = request.form['confirm_password']
+
+        if password != confirm_password:
+            flash('Passwords do not match.', 'danger')
+            return redirect(url_for('reset_password', token=token))
+
+        user = User.query.filter_by(email=email).first()
+        if not user:
+            flash('User not found.', 'danger')
+            return redirect(url_for('forgot_password'))
+
+        user.password = generate_password_hash(password)
+        db.session.commit()
+        flash('Your password has been updated!', 'success')
+        return redirect(url_for('login'))  # Your login route
+
+    return render_template('reset_password.html', token=token)
 
 
 if __name__ == '__main__':
