@@ -2,7 +2,7 @@
 {% block content %}
 
 <h2>
-  {{ user.username }}
+  {{ user.username }} ({{ comment.user.reputation|default(0)|round(1) }}⭐)
   {% if user.confirmed %}
     <span class="badge confirmed">✔ Confirmed</span>
   {% endif %}

@@ -18,7 +18,7 @@
   by <a href="{{ url_for('profile', username=post.user.username) }}">
       <img src="{{ post.user.get_profile_pic() }}" alt="Profile Picture"
            style="height:20px; width:20px; border-radius:50%; vertical-align:middle; margin-right:5px;">
-      {{ post.user.username }} ({{ post.user.reputation|round(1) }}⭐)
+      {{ post.user.username }} ({{ post.user.reputation|default(0)|round(1) }}⭐)
   </a> on {{ post.created_at.strftime('%Y-%m-%d %H:%M:%S') }}
 </p>
 
