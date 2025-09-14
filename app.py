@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, abort, current_app
 from flask_migrate import Migrate
-from models import db, User, Post, Comment, Tag, DOI
+from models import db, User, Post, Comment, Tag, DOI, PostVote, CommentVote
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from dotenv import load_dotenv
 from werkzeug.utils import secure_filename
@@ -222,6 +222,61 @@ def send_confirmation_email(user):
     html = render_template('email/activate.html', confirm_url=confirm_url, user=user)
     subject = "Please confirm your email"
     send_email(user.email, subject, html)
+
+# ----------------------------
+# VOTING
+# ----------------------------
+def vote_post(user, post, vote_value):
+    """vote_value = 1 (upvote) or -1 (downvote)"""
+    existing_vote = PostVote.query.filter_by(user_id=user.id, post_id=post.id).first()
+    if existing_vote:
+        # Remove reputation from old vote
+        post_owner = User.query.get(post.user_id)
+        post_owner.reputation -= existing_vote.vote
+        # Update vote
+        existing_vote.vote = vote_value
+    else:
+        existing_vote = PostVote(user_id=user.id, post_id=post.id, vote=vote_value)
+        db.session.add(existing_vote)
+    
+    # Update reputations
+    post_owner = User.query.get(post.user_id)
+    post_owner.reputation += vote_value
+    user.reputation += 0.1  # voter gets 0.1
+
+    db.session.commit()
+
+
+def vote_comment(user, comment, vote_value):
+    existing_vote = CommentVote.query.filter_by(user_id=user.id, comment_id=comment.id).first()
+    if existing_vote:
+        comment_owner = User.query.get(comment.user_id)
+        comment_owner.reputation -= existing_vote.vote
+        existing_vote.vote = vote_value
+    else:
+        existing_vote = CommentVote(user_id=user.id, comment_id=comment.id, vote=vote_value)
+        db.session.add(existing_vote)
+    
+    comment_owner = User.query.get(comment.user_id)
+    comment_owner.reputation += vote_value
+    user.reputation += 0.1  # voter gets 0.1
+
+    db.session.commit()
+
+@app.route('/vote/post/<int:post_id>/<int:vote_value>', methods=['POST'])
+@login_required
+def vote_post_route(post_id, vote_value):
+    post = Post.query.get_or_404(post_id)
+    vote_post(current_user, post, vote_value)
+    return redirect(request.referrer)
+
+@app.route('/vote/comment/<int:comment_id>/<int:vote_value>', methods=['POST'])
+@login_required
+def vote_comment_route(comment_id, vote_value):
+    comment = Comment.query.get_or_404(comment_id)
+    vote_comment(current_user, comment, vote_value)
+    return redirect(request.referrer)
+
 
 
 # ----------------------------

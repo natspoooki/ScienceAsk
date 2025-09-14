@@ -87,3 +87,18 @@ class DOI(db.Model):
     comment_id = db.Column(db.Integer, db.ForeignKey('comment.id'), nullable=True)
 
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+
+class PostVote(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete="CASCADE"))
+    post_id = db.Column(db.Integer, db.ForeignKey('post.id', ondelete="CASCADE"))
+    vote = db.Column(db.SmallInteger)  # 1 for upvote, -1 for downvote
+    __table_args__ = (db.UniqueConstraint('user_id', 'post_id', name='unique_user_post'),)
+
+class CommentVote(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete="CASCADE"))
+    comment_id = db.Column(db.Integer, db.ForeignKey('comment.id', ondelete="CASCADE"))
+    vote = db.Column(db.SmallInteger)
+    __table_args__ = (db.UniqueConstraint('user_id', 'comment_id', name='unique_user_comment'),)
+
