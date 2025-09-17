@@ -5,13 +5,15 @@ from flask_login import LoginManager, login_user, login_required, logout_user, c
 from dotenv import load_dotenv
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
-
+import boto3
 import os
 import re
 import requests
 from flask_mail import Mail, Message
 from itsdangerous import URLSafeTimedSerializer
 from datetime import datetime
+from botocore.config import Config
+
 
 load_dotenv()
 
@@ -53,6 +55,20 @@ app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_DEFAULT_SENDER')
 
 mail = Mail(app)
 
+R2_ACCOUNT_ID = os.getenv('R2_ACCOUNT_ID')
+R2_BUCKET_NAME = os.getenv('R2_BUCKET_NAME')
+R2_API_TOKEN = os.getenv('R2_API_TOKEN')
+
+# Create boto3 client
+r2_client = boto3.client(
+    "s3",
+    endpoint_url=os.getenv("R2_ENDPOINT"),
+    aws_access_key_id=os.getenv("R2_ACCESS_KEY_ID"),
+    aws_secret_access_key=os.getenv("R2_SECRET_ACCESS_KEY"),
+    config=Config(signature_version="s3v4")
+)
+
+
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
@@ -60,6 +76,18 @@ login_manager.login_view = 'login'
 # Define all disciplines
 all_disciplines = ['math', 'physics', 'chemistry', 'biology', 'computer science',
                    'economics', 'medicine', 'statistics', 'robotics', 'engineering']
+
+def get_signed_url(key, bucket=os.getenv("R2_BUCKET_NAME"), expires=3600):
+    """Return a signed URL for an object in R2 bucket"""
+    if not key:
+        key = 'Default_pfp.jpg'
+    url = r2_client.generate_presigned_url(
+        'get_object',
+        Params={'Bucket': bucket, 'Key': key},
+        ExpiresIn=expires
+    )
+    return url
+
 
 
 # ----------------------------
@@ -224,46 +252,77 @@ def send_confirmation_email(user):
     send_email(user.email, subject, html)
 
 # ----------------------------
-# VOTING
+# VOTING with karma update
 # ----------------------------
-def vote_post(user, post, vote_value):
-    """vote_value = 1 (upvote) or -1 (downvote)"""
-    vote_value = int(vote_value)  
-    existing_vote = PostVote.query.filter_by(user_id=user.id, post_id=post.id).first()
-    if existing_vote:
-        # Remove reputation from old vote
-        post_owner = User.query.get(post.user_id)
-        post_owner.reputation -= existing_vote.vote
-        # Update vote
-        existing_vote.vote = vote_value
+@app.route("/vote/post/<int:post_id>", methods=["POST"])
+@login_required
+def vote_post(post_id):
+    data = request.get_json()
+    value = data.get("vote")  # 1 or -1
+
+    post = Post.query.get_or_404(post_id)
+    vote = PostVote.query.filter_by(user_id=current_user.id, post_id=post_id).first()
+
+    if vote:
+        if vote.vote == value:
+            # toggle off
+            post.user.reputation -= vote.vote  # remove previous vote from author
+            db.session.delete(vote)
+            user_vote = 0
+        else:
+            # change vote
+            post.user.reputation -= vote.vote  # remove old vote
+            vote.vote = value
+            post.user.reputation += value     # add new vote
+            user_vote = value
     else:
-        existing_vote = PostVote(user_id=user.id, post_id=post.id, vote=vote_value)
-        db.session.add(existing_vote)
-    
-    # Update reputations
-    post_owner = User.query.get(post.user_id)
-    post_owner.reputation += vote_value
-    user.reputation += 0.1  # voter gets 0.1
+        vote = PostVote(user_id=current_user.id, post_id=post_id, vote=value)
+        db.session.add(vote)
+        post.user.reputation += value  # add karma to post author
+        user_vote = value
 
     db.session.commit()
 
+    # calculate new score
+    score = db.session.query(db.func.sum(PostVote.vote)).filter_by(post_id=post_id).scalar() or 0
 
-def vote_comment(user, comment, vote_value):
-    vote_value = int(vote_value)  
-    existing_vote = CommentVote.query.filter_by(user_id=user.id, comment_id=comment.id).first()
-    if existing_vote:
-        comment_owner = User.query.get(comment.user_id)
-        comment_owner.reputation -= existing_vote.vote
-        existing_vote.vote = vote_value
+    return jsonify({"score": score, "user_vote": user_vote, "reputation": post.user.reputation})
+
+
+@app.route("/vote/comment/<int:comment_id>", methods=["POST"])
+@login_required
+def vote_comment(comment_id):
+    data = request.get_json()
+    value = data.get("vote")  # 1 or -1
+
+    comment = Comment.query.get_or_404(comment_id)
+    vote = CommentVote.query.filter_by(user_id=current_user.id, comment_id=comment_id).first()
+
+    if vote:
+        if vote.vote == value:
+            # toggle off
+            comment.user.reputation -= vote.vote  # remove previous vote from comment author
+            db.session.delete(vote)
+            user_vote = 0
+        else:
+            # change vote
+            comment.user.reputation -= vote.vote  # remove old vote
+            vote.vote = value
+            comment.user.reputation += value       # add new vote
+            user_vote = value
     else:
-        existing_vote = CommentVote(user_id=user.id, comment_id=comment.id, vote=vote_value)
-        db.session.add(existing_vote)
-    
-    comment_owner = User.query.get(comment.user_id)
-    comment_owner.reputation += vote_value
-    user.reputation += 0.1  # voter gets 0.1
+        vote = CommentVote(user_id=current_user.id, comment_id=comment_id, vote=value)
+        db.session.add(vote)
+        comment.user.reputation += value  # add karma to comment author
+        user_vote = value
 
     db.session.commit()
+
+    # calculate new score
+    score = db.session.query(db.func.sum(CommentVote.vote)).filter_by(comment_id=comment_id).scalar() or 0
+
+    return jsonify({"score": score, "user_vote": user_vote, "reputation": comment.user.reputation})
+
 
 @app.route('/vote/post/<int:post_id>/<int:vote_value>', methods=['POST'])
 @login_required
@@ -370,8 +429,16 @@ def profile(username):
             pic = request.files['profile_pic']
             if pic.filename:
                 filename = secure_filename(pic.filename)
-                filepath = os.path.join('static/profile_pics', filename)
-                pic.save(filepath)
+
+                # Upload to R2
+                r2_client.put_object(
+                    Bucket=R2_BUCKET_NAME,
+                    Key=filename,
+                    Body=pic,
+                    ContentType=pic.content_type
+                )
+
+                # Store only the filename in DB
                 user.profile_pic = filename
 
         db.session.commit()
@@ -385,7 +452,8 @@ def profile(username):
     dois = [d for c in comments for d in getattr(c, 'dois', [])] + \
            [d for p in posts for d in getattr(p, 'dois', [])]
 
-    return render_template('profile.html', user=user, posts=posts, comments=comments, dois=dois)
+    profile_pic_url = get_signed_url(user.profile_pic)
+    return render_template('profile.html', user=user,  profile_pic_url=profile_pic_url, posts=posts, comments=comments, dois=dois)
 
 
 # ----------------------------
@@ -465,9 +533,16 @@ def register():
             pic = request.files['profile_pic']
             if pic.filename:
                 filename = secure_filename(pic.filename)
-                filepath = os.path.join('static/profile_pics', filename)
-                os.makedirs(os.path.dirname(filepath), exist_ok=True)
-                pic.save(filepath)
+
+                # Upload to R2
+                r2_client.put_object(
+                    Bucket=R2_BUCKET_NAME,
+                    Key=filename,
+                    Body=pic,
+                    ContentType=pic.content_type
+                )
+
+                # Store only the filename in DB
                 user.profile_pic = filename
 
         db.session.add(user)
@@ -514,7 +589,7 @@ def login():
         user = User.query.filter_by(username=username).first()
 
         if user and user.check_password(password):
-            if not user.confirmed and user.confirmed:
+            if not user.confirmed:
                 # User exists, password correct, but not verified
                 resend_email_user = user  # pass to template
                 flash('Your account is not verified yet.', 'warning')
@@ -667,11 +742,68 @@ def dashboard(tag):
 
     return render_template('dashboard.html', posts=posts, tag=tag, disciplines=disciplines)
 
-@app.route('/post/<int:post_id>')
+from sqlalchemy import func
+
+@app.route("/post/<int:post_id>")
 def post_detail(post_id):
     post = Post.query.get_or_404(post_id)
-    post.sorted_comments = post.comments.order_by(Comment.created_at.asc()).all()
-    return render_template('post_detail.html', post=post, Comment=Comment)
+
+    # --- calculate post score ---
+    score = db.session.query(func.sum(PostVote.vote)).filter_by(post_id=post.id).scalar() or 0
+    post_score = {post.id: score}
+
+    # --- calculate comment scores ---
+    comment_score = {}
+    for comment in post.comments:
+        c_score = db.session.query(func.sum(CommentVote.vote)).filter_by(comment_id=comment.id).scalar() or 0
+        comment_score[comment.id] = c_score
+
+    # --- user’s votes (for coloring buttons) ---
+    user_upvotes = set()
+    user_downvotes = set()
+    user_comment_upvotes = set()
+    user_comment_downvotes = set()
+
+    if current_user.is_authenticated:
+        # posts
+        post_votes = PostVote.query.filter_by(user_id=current_user.id, post_id=post.id).all()
+        for v in post_votes:
+            if v.vote == 1:
+                user_upvotes.add(v.post_id)
+            elif v.vote == -1:
+                user_downvotes.add(v.post_id)
+
+        # comments
+        comment_votes = CommentVote.query.filter_by(user_id=current_user.id).all()
+        for v in comment_votes:
+            if v.vote == 1:
+                user_comment_upvotes.add(v.comment_id)
+            elif v.vote == -1:
+                user_comment_downvotes.add(v.comment_id)
+    
+    post_author_url = get_signed_url(post.user.profile_pic)
+    comment_urls = {c.id: get_signed_url(c.user.profile_pic) for c in post.comments}
+    reply_urls = {}
+    for comment in post.comments:
+        for reply in comment.replies:
+            reply_urls[reply.id] = get_signed_url(reply.user.profile_pic)
+
+    return render_template(
+        "post_detail.html",
+        post=post,
+        post_author_url=post_author_url,
+        comment_urls=comment_urls,
+        reply_urls=reply_urls,
+        Comment=Comment,
+        post_score=post_score,
+        comment_score=comment_score,
+        user_upvotes=user_upvotes,
+        user_downvotes=user_downvotes,
+        user_comment_upvotes=user_comment_upvotes,
+        user_comment_downvotes=user_comment_downvotes,
+        post_author=post.user
+    )
+
 
 # ----------------------------
 # DOI Preview API (AJAX)

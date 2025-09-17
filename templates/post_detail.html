@@ -16,16 +16,19 @@
 
 <p>
   by <a href="{{ url_for('profile', username=post.user.username) }}">
-      <img src="{{ post.user.get_profile_pic() }}" alt="Profile Picture"
-           style="height:20px; width:20px; border-radius:50%; vertical-align:middle; margin-right:5px;">
+      <img src="{{ post_author_url }}" alt="Profile Picture" style="height:20px; width:20px; border-radius:50%; vertical-align:middle; margin-right:5px;">
       {{ post.user.username }} ({{ post.user.reputation|default(0)|round(1) }}⭐)
   </a> on {{ post.created_at.strftime('%Y-%m-%d %H:%M:%S') }}
 </p>
 
 <div style="margin-top: 20px;">
   <p>{{ post.content }}</p>
-    <button onclick="votePost({{ post.id }}, 1)">▲</button>
-    <button onclick="votePost({{ post.id }}, -1)">▼</button>
+    <div class="vote-container" data-post-id="{{ post.id }}">
+      <button class="vote-btn upvote {% if current_user.is_authenticated and post.id in user_upvotes %}active{% endif %}">▲</button>
+      <span class="vote-count">{{ post_score[post.id] }}</span>
+      <button class="vote-btn downvote {% if current_user.is_authenticated and post.id in user_downvotes %}active{% endif %}">▼</button>
+  </div>
+
 </div>
 
 {% if post.dois %}
@@ -97,8 +100,7 @@
 
     <p>
       <a href="{{ url_for('profile', username=comment.user.username) }}">
-        <img src="{{ comment.user.get_profile_pic() }}" alt="Profile Picture"
-             style="height:18px; width:18px; border-radius:50%; vertical-align:middle; margin-right:5px;">
+        <img src="{{ comment_urls[comment.id] }}" alt="Profile Picture" style="height:18px; width:18px; border-radius:50%; vertical-align:middle; margin-right:5px;">
         {{ comment.user.username }} ({{ comment.user.reputation|round(1) }}⭐)
       </a>
       ({{ comment.created_at.strftime('%Y-%m-%d %H:%M') }})
@@ -122,7 +124,12 @@
 
     <p>{{ comment.content }}</p>
     <button onclick="voteComment({{ comment.id }}, 1)">▲</button>
-    <button onclick="voteComment({{ comment.id }}, -1)">▼</button>
+    <div class="vote-container" data-comment-id="{{ comment.id }}">
+      <button class="vote-btn upvote {% if current_user.is_authenticated and comment.id in user_comment_upvotes %}active{% endif %}">▲</button>
+      <span class="vote-count">{{ comment_score[comment.id] }}</span>
+      <button class="vote-btn downvote {% if current_user.is_authenticated and comment.id in user_comment_downvotes %}active{% endif %}">▼</button>
+    </div>
+
 
     {% if comment.dois %}
       <div class="references-box">
@@ -170,8 +177,7 @@
           <div class="reply" style="margin-left: 10px; border-left: 2px solid #888; padding-left: 8px; margin-bottom:8px;">
             <p>
               <a href="{{ url_for('profile', username=reply.user.username) }}">
-                <img src="{{ reply.user.get_profile_pic() }}" alt="Profile Picture"
-                     style="height:18px; width:18px; border-radius:50%; vertical-align:middle; margin-right:5px;">
+                <img src="{{ reply_urls[reply.id] }}" alt="Profile Picture" style="height:18px; width:18px; border-radius:50%; vertical-align:middle; margin-right:5px;">
                 {{ reply.user.username }}
               </a>
               ({{ reply.created_at.strftime('%Y-%m-%d %H:%M') }})
@@ -365,4 +371,39 @@ function voteComment(commentId, voteValue) {
     });
 }
 </script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll(".vote-container").forEach(container => {
+    const postId = container.dataset.postId;
+    const commentId = container.dataset.commentId;
+    const upBtn = container.querySelector(".upvote");
+    const downBtn = container.querySelector(".downvote");
+    const countSpan = container.querySelector(".vote-count");
+
+    function sendVote(value) {
+      const url = postId 
+        ? `/vote/post/${postId}`
+        : `/vote/comment/${commentId}`;
+
+      fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ vote: value })
+      })
+      .then(res => res.json())
+      .then(data => {
+        countSpan.textContent = data.score;
+        upBtn.classList.toggle("active", data.user_vote === 1);
+        downBtn.classList.toggle("active", data.user_vote === -1);
+      });
+    }
+
+    upBtn.addEventListener("click", () => sendVote(1));
+    downBtn.addEventListener("click", () => sendVote(-1));
+  });
+});
+</script>
+
 {% endblock %}

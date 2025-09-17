@@ -8,7 +8,7 @@
   {% endif %}
 </h2>
 
-<img src="{{ user.get_profile_pic() }}" alt="Profile Picture" class="profile-pic">
+<img src="{{ profile_pic_url }}" alt="Profile Picture" class = "profile-pic">
 
 {% if current_user.id == user.id %}
 <h3>Edit Profile</h3>

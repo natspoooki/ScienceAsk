@@ -229,3 +229,42 @@ body.dark-mode #darkModeToggle {
   background-color: #66aaff;
   color: #121212;
 }
+
+/* -----------------------------
+   Voting Buttons
+------------------------------ */
+.vote-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.vote-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.4rem;
+  padding: 5px;
+  transition: color 0.2s ease, transform 0.1s ease;
+}
+
+.vote-btn.upvote { color: #888; }
+.vote-btn.downvote { color: #888; }
+
+.vote-btn.upvote.active { color: #28a745; }    /* green */
+.vote-btn.downvote.active { color: #e74c3c; } /* red */
+
+.vote-btn:hover { transform: scale(1.1); }
+
+.vote-count {
+  font-weight: bold;
+  font-size: 1.1rem;
+  min-width: 25px;
+  text-align: center;
+}
+
+/* Dark mode adjustments */
+body.dark-mode .vote-btn.upvote.active { color: #66ff99; }
+body.dark-mode .vote-btn.downvote.active { color: #ff6666; }
+body.dark-mode .vote-count { color: #ddd; }
