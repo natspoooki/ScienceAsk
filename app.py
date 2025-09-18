@@ -589,7 +589,7 @@ def login():
         user = User.query.filter_by(username=username).first()
 
         if user and user.check_password(password):
-            if not user.confirmed:
+            if not user.confirmed and user.confirmed:
                 # User exists, password correct, but not verified
                 resend_email_user = user  # pass to template
                 flash('Your account is not verified yet.', 'warning')
