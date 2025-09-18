@@ -77,7 +77,7 @@
 
 <h2>Comments</h2>
 
-{% if not post.solved %}
+{% if not post.solved or post.solved %}
 <h3>Leave a Comment</h3>
 <form method="POST" action="{{ url_for('comment', post_id=post.id) }}">
   <textarea name="content" rows="3" cols="60" placeholder="Add a comment..." required></textarea><br>
@@ -105,12 +105,12 @@
       </a>
       ({{ comment.created_at.strftime('%Y-%m-%d %H:%M') }})
       {% if current_user.id == comment.user_id %}
-      {% if not post.solved %}
+      {% if not post.solved or post.solved %}
   <a href="{{ url_for('edit_comment', comment_id=comment.id) }}" style="font-size:0.8em; margin-left:5px;">Edit</a>
       {% endif %}
 
   <!-- DELETE COMMENT -->
-   {% if not post.solved %}
+   {% if not post.solved or post.solved %}
   <form method="POST" action="{{ url_for('delete_comment', comment_id=comment.id) }}" style="display:inline;">
       <button type="submit" class="delete-comment-btn" style="font-size:0.8em; margin-left:5px; color:red; background-color: black;">Delete ❌</button>
   </form>
@@ -145,10 +145,10 @@
         </ul>
       </div>
     {% endif %}
-{% if not post.solved %}
+{% if not post.solved or post.solved %}
     <a href="javascript:void(0);" onclick="toggleReplyForm({{ comment.id }})" id="toggle-link-{{ comment.id }}" style="color: blue; cursor: pointer;">reply</a>
 {% endif %}
-    {% if not post.solved %}
+    {% if not post.solved or post.solved %}
     <div id="reply-form-{{ comment.id }}" style="display:none; margin-top: 10px;">
       <form method="POST" action="{{ url_for('comment', post_id=post.id) }}">
         <input type="hidden" name="parent_id" value="{{ comment.id }}">
@@ -183,7 +183,7 @@
             </p>
             <p>{{ reply.content }}</p>
             {% if current_user.id == reply.user_id %}
-            {% if not post.solved %}
+            {% if not post.solved or post.solved %}
   <a href="{{ url_for('edit_comment', comment_id=reply.id) }}" style="font-size:0.8em; margin-left:5px;">Edit</a>
   <form method="POST" action="{{ url_for('delete_comment', comment_id=reply.id) }}" style="display:inline;">
       <button type="submit" class="delete-comment-btn" style="font-size:0.8em; margin-left:5px; color:red; background-color: black;">Delete ❌</button>
