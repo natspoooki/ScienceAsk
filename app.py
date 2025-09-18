@@ -735,12 +735,17 @@ def dashboard(tag):
         return redirect(url_for('home'))
 
     posts = tag_obj.posts.order_by(Post.created_at.desc()).all()
+
+    # attach sorted comments and signed pfp URL for each post/user
     for post in posts:
         post.sorted_comments = post.comments.order_by(Comment.created_at.asc()).all()
+        # get_signed_url already handles None (it falls back to Default_pfp.jpg)
+        post.user.signed_pfp_url = get_signed_url(getattr(post.user, 'profile_pic', None))
 
     disciplines = [t.name for t in Tag.query.order_by(Tag.name).all()]
 
     return render_template('dashboard.html', posts=posts, tag=tag, disciplines=disciplines)
+
 
 from sqlalchemy import func
 
@@ -932,6 +937,36 @@ def reset_password(token):
 
     return render_template('reset_password.html', token=token)
 
+# ----------------------------
+# API route to get all posts (used by AJAX)
+# ----------------------------
+@app.route('/get_posts')
+def get_posts():
+    """Return posts in JSON for AJAX on home page."""
+    posts = Post.query.order_by(Post.created_at.desc()).all()
+    result = []
+    for post in posts:
+        score = db.session.query(db.func.sum(PostVote.vote)).filter_by(post_id=post.id).scalar() or 0
+        user_upvoted = user_downvoted = False
+        if current_user.is_authenticated:
+            pv = PostVote.query.filter_by(post_id=post.id, user_id=current_user.id).first()
+            if pv:
+                user_upvoted = pv.vote == 1
+                user_downvoted = pv.vote == -1
+
+        result.append({
+            "id": post.id,
+            "title": post.title,
+            "content": post.content,
+            "author": post.user.username,
+            "created_at": post.created_at.strftime('%Y-%m-%d %H:%M'),
+            "profile_pic_url": get_signed_url(post.user.profile_pic),
+            "tags": [t.name for t in post.tags],
+            "votes": score,
+            "user_upvoted": user_upvoted,
+            "user_downvoted": user_downvoted
+        })
+    return jsonify(result)
 
 if __name__ == '__main__':
     app.run(debug=True)

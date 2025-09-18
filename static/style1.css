@@ -268,3 +268,9 @@ body.dark-mode #darkModeToggle {
 body.dark-mode .vote-btn.upvote.active { color: #66ff99; }
 body.dark-mode .vote-btn.downvote.active { color: #ff6666; }
 body.dark-mode .vote-count { color: #ddd; }
+
+.posts-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}

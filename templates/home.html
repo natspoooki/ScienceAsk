@@ -1,8 +1,13 @@
 {% extends "base.html" %}
 
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='style1.css') }}">
+{% endblock %}
+
 {% block content %}
   {% if not current_user.is_authenticated %}
-    <a href="{{ url_for('login') }}">Login</a> or <a href="{{ url_for('register') }}">Create Account</a>
+    <a href="{{ url_for('login') }}">Login</a> or 
+    <a href="{{ url_for('register') }}">Create Account</a>
   {% endif %}
 
   <h2>Choose a Discipline</h2>
@@ -18,11 +23,8 @@
     'robotics': 'fa-robot',
     'engineering': 'fa-gears'
   } %}
-  
-  
-  <h2>Disciplines</h2>
-  
-  <ul style="list-style-type:none; padding-left: 0;">
+
+  <ul style="list-style:none; padding-left: 0;">
     {% for discipline in disciplines %}
       <li style="display: flex; align-items: center; margin-bottom: 10px;">
         <i class="fas {{ icon_map[discipline] }}" style="width: 20px; min-width: 20px; margin-right: 10px;"></i>
@@ -32,8 +34,89 @@
       </li>
     {% endfor %}
   </ul>
-  
-  
-  
-  
+
+  <hr>
+
+  <div style="margin-top: 20px;">
+    <button id="toggleAllPosts" class="btn btn-primary">View All Posts</button>
+  </div>
+
+  <div id="allPostsContainer" class="posts-container"></div>
+
+<script>
+let postsLoaded = false;
+
+function loadPosts() {
+    // Only load posts if they haven't been loaded yet
+    if (!postsLoaded) {
+        fetch('/api/all_posts')
+            .then(res => res.json())
+            .then(posts => {
+                const container = document.getElementById('allPostsContainer');
+                container.innerHTML = ''; // clear container
+
+                posts.forEach(post => {
+                    // Tags HTML
+                    let tagsHTML = '';
+                    if (post.tags && post.tags.length) {
+                        post.tags.forEach(tag => {
+                            tagsHTML += `<span class="tag-badge">${tag}</span> `;
+                        });
+                    }
+
+                    // Votes HTML
+                    const votesHTML = `
+                        <div class="vote-container">
+                            <button class="vote-btn upvote ${post.user_upvoted ? 'active' : ''}" onclick="votePost(${post.id}, 1)">&#9650;</button>
+                            <span class="vote-count" id="vote-count-${post.id}">${post.score}</span>
+                            <button class="vote-btn downvote ${post.user_downvoted ? 'active' : ''}" onclick="votePost(${post.id}, -1)">&#9660;</button>
+                        </div>
+                    `;
+
+                    // Post card HTML
+                    const postCard = document.createElement('div');
+                    postCard.className = 'post';
+                    postCard.innerHTML = `
+                        <div style="display:flex; align-items:center; margin-bottom:10px;">
+                            <img src="${post.profile_pic_url || '/static/default_profile.png'}" alt="Profile" class="profile-pic">
+                            <div style="margin-left:10px;">
+                                <h3><a href="/post/${post.id}">${post.title}</a></h3>
+                                <small>by <em>${post.author}</em> on ${post.created_at}</small>
+                            </div>
+                        </div>
+                        <p>${post.content ? post.content.substring(0, 200) : ''}${post.content && post.content.length > 200 ? '...' : ''}</p>
+                        <div>${tagsHTML}</div>
+                        ${votesHTML}
+                        <a href="/post/${post.id}" style="display:block; margin-top:10px;">Read more</a>
+                    `;
+                    container.appendChild(postCard);
+                });
+
+                postsLoaded = true; // mark as loaded
+            })
+            .catch(err => console.error('Error loading posts:', err));
+    }
+}
+
+// Toggle container visibility
+document.getElementById('toggleAllPosts').addEventListener('click', () => {
+    const container = document.getElementById('allPostsContainer');
+
+    if (container.style.display === 'none' || container.style.display === '') {
+        container.style.display = 'block'; // show
+        loadPosts(); // load posts
+        document.getElementById('toggleAllPosts').innerText = 'Hide All Posts';
+    } else {
+        container.style.display = 'none'; // hide
+        document.getElementById('toggleAllPosts').innerText = 'View All Posts';
+    }
+});
+
+// Hide container by default on page load
+document.addEventListener('DOMContentLoaded', () => {
+    const container = document.getElementById('allPostsContainer');
+    if (container) container.style.display = 'none';
+});
+</script>
+
 {% endblock %}
