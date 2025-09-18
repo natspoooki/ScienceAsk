@@ -62,7 +62,7 @@
 
 {% if current_user.id == post.user_id %}
   <div style="margin-top:6px;">
-    {% if not post.solved %}
+    {% if not post.solved or post.solved %}
     <a href="{{ url_for('edit_post', post_id=post.id) }}" style="font-size:0.9em; margin-left:10px;">Edit</a>
     {% endif %}
 
