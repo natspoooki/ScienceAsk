@@ -47,13 +47,12 @@
 let postsLoaded = false;
 
 function loadPosts() {
-    // Only load posts if they haven't been loaded yet
     if (!postsLoaded) {
-        fetch('/api/all_posts')
+        fetch('/get_posts')  // <-- use the correct route
             .then(res => res.json())
             .then(posts => {
                 const container = document.getElementById('allPostsContainer');
-                container.innerHTML = ''; // clear container
+                container.innerHTML = '';
 
                 posts.forEach(post => {
                     // Tags HTML
@@ -68,7 +67,7 @@ function loadPosts() {
                     const votesHTML = `
                         <div class="vote-container">
                             <button class="vote-btn upvote ${post.user_upvoted ? 'active' : ''}" onclick="votePost(${post.id}, 1)">&#9650;</button>
-                            <span class="vote-count" id="vote-count-${post.id}">${post.score}</span>
+                            <span class="vote-count" id="vote-count-${post.id}">${post.votes}</span>
                             <button class="vote-btn downvote ${post.user_downvoted ? 'active' : ''}" onclick="votePost(${post.id}, -1)">&#9660;</button>
                         </div>
                     `;
@@ -92,31 +91,29 @@ function loadPosts() {
                     container.appendChild(postCard);
                 });
 
-                postsLoaded = true; // mark as loaded
+                postsLoaded = true;
             })
             .catch(err => console.error('Error loading posts:', err));
     }
 }
 
-// Toggle container visibility
 document.getElementById('toggleAllPosts').addEventListener('click', () => {
     const container = document.getElementById('allPostsContainer');
-
     if (container.style.display === 'none' || container.style.display === '') {
-        container.style.display = 'block'; // show
-        loadPosts(); // load posts
+        container.style.display = 'block';
+        loadPosts();
         document.getElementById('toggleAllPosts').innerText = 'Hide All Posts';
     } else {
-        container.style.display = 'none'; // hide
+        container.style.display = 'none';
         document.getElementById('toggleAllPosts').innerText = 'View All Posts';
     }
 });
 
-// Hide container by default on page load
 document.addEventListener('DOMContentLoaded', () => {
     const container = document.getElementById('allPostsContainer');
     if (container) container.style.display = 'none';
 });
 </script>
+
 
 {% endblock %}

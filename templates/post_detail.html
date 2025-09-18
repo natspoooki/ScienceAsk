@@ -123,7 +123,6 @@
     </p>
 
     <p>{{ comment.content }}</p>
-    <button onclick="voteComment({{ comment.id }}, 1)">▲</button>
     <div class="vote-container" data-comment-id="{{ comment.id }}">
       <button class="vote-btn upvote {% if current_user.is_authenticated and comment.id in user_comment_upvotes %}active{% endif %}">▲</button>
       <span class="vote-count">{{ comment_score[comment.id] }}</span>
